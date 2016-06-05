@@ -7,4 +7,10 @@
  */
 
 namespace improwerk\implement\mvcd;
-use improwerk\implement\mvcd as mvcd;
+
+interface ibasic
+{
+    public function __construct ();
+    public function __destruct ();
+}
+
