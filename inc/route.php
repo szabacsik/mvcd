@@ -45,21 +45,17 @@ class route implements ibasic
     private $argc;
     //$_GET, $_POST, $_COOKIE
     private $REQUEST;
+
     //Private
-    private $domain_name;
-    private $port;
-    private $path_root;
-    private $path_abstract;
-    private $variables;
-    private $route = array ();
+    public $sense = array ( "domain" => "", "base" => "", "route" => array (), "variables" => array (), "protocol" => "", "port" => "" );
 
     function __construct()
     {
-        $this->fillProperties();
-        $this->processProperties();
+        $this->initStatic();
+        $this->initDynamic();
     }
 
-    private function fillProperties ()
+    private function initStatic ()
     {
         $this -> HTTP_HOST                      = $_SERVER [ 'HTTP_HOST' ];
         $this -> SERVER_NAME                    = $_SERVER [ 'SERVER_NAME' ];
@@ -98,46 +94,45 @@ class route implements ibasic
         $this -> argv                           = $_SERVER [ 'argv' ];
         $this -> argc                           = $_SERVER [ 'argc' ];
         $this -> REQUEST                        = $_REQUEST;
+
+        $this -> sense [ "variables" ] = $this -> REQUEST;
+        $this->sense [ "port" ]        = $this -> SERVER_PORT;
+        $this->sense [ "protocol" ]    = $this -> SERVER_PROTOCOL;
     }
 
-    private function processProperties ()
+    private function initDynamic ()
     {
         if ( strpos ( $this -> REQUEST_URI, "?" ) === false )
-        {
-            $this->variables = false;
-            $temp[0] = $this -> REQUEST_URI;
-        }
+            $temp [ 0 ] = $this -> REQUEST_URI;
         else
-        {
             $temp = explode ( "?", $this -> REQUEST_URI );
-            $this -> variables = $temp [1];
-        }
-        $this -> domain_name = explode ( ':', $this -> HTTP_HOST );
-        $this -> domain_name = $this -> domain_name [0];
-        $this -> path_root = str_replace ( basename ( $this -> SCRIPT_FILENAME ), '', $this -> SCRIPT_NAME );
-        $this -> path_abstract = str_replace( $this -> path_root, '', str_replace ( basename ( $this -> SCRIPT_FILENAME ), '', $temp [ 0 ] ) );
-        unset($temp);
-        var_dump($this -> path_abstract);
-        $this -> path_abstract = preg_replace('~/+~', '/', $this -> path_abstract );
-        $this -> path_abstract = ltrim ( $this -> path_abstract, '/' );
-        $this -> path_abstract = rtrim ( $this -> path_abstract, '/' );
-        if ( $this -> path_abstract === "/" )
+        $this -> sense [ "domain" ] = explode ( ':', $this -> HTTP_HOST );
+        $this -> sense [ "domain" ] = $this -> sense [ "domain" ] [ 0 ];
+        $this -> sense [ "base" ] = str_replace ( basename ( $this -> SCRIPT_FILENAME ), '', $this -> SCRIPT_NAME );
+        $path_abstract = str_replace ( $this -> sense [ "base" ], '', str_replace ( basename ( $this -> SCRIPT_FILENAME ), '', $temp [ 0 ] ) );
+        unset ( $temp );
+        $path_abstract = preg_replace('~/+~', '/', $path_abstract );
+        $path_abstract = ltrim ( $path_abstract, '/' );
+        $path_abstract = rtrim ( $path_abstract, '/' );
+        if ( $path_abstract === "/" || $path_abstract === "" )
         {
-            $this -> route = array ( 0 => "/" );
+            $this -> sense [ "route" ] = array ( 0 => "/" );
         }
         else
-            $this -> route = explode( "/", $this -> path_abstract );
-
+        {
+            $this -> sense [ "route" ] = explode( "/", $path_abstract );
+            array_unshift ( $this -> sense [ "route" ], "/" );
+        }
     }
 
     function getRoute ()
     {
-        return $this -> route;
+        return $this -> sense [ "route" ];
     }
     
     function getDomain ()
     {
-        return $this -> domain_name;
+        return $this -> sense [ "domain" ];
     }
 
     function getPort()
