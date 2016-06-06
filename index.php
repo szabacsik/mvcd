@@ -15,13 +15,19 @@ $route = new mvcd\route();
 
 
 ob_start();
-var_dump($route->getRoute()) ;
+var_dump($route->sense);
 $dump = ob_get_contents();
 ob_end_clean();
 echo "<pre> $dump </pre>";
-
+/*echo "<hr>";
 ob_start();
-var_dump($route->getDomain()) ;
+var_dump($_SERVER);
 $dump = ob_get_contents();
 ob_end_clean();
 echo "<pre> $dump </pre>";
+echo "<hr>";
+ob_start();
+var_dump($_REQUEST);
+$dump = ob_get_contents();
+ob_end_clean();
+echo "<pre> $dump </pre>";*/
