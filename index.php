@@ -6,14 +6,16 @@
  * Time: 15:30
  */
 
-require_once ('inc/interfaces.php');
-require_once ('inc/route.php');
+require_once('core/interfaces.php');
+require_once('core/route.php');
+require_once('core/dispatcher.php');
 
 use improwerk\implement\mvcd as mvcd;
 
-$route = new mvcd\route();
+$route = new mvcd\route ();
+$dispatcher = new mvcd\dispatcher ( $route );
 
-
+//print $route -> working_directory;
 ob_start();
 var_dump($route->sense);
 $dump = ob_get_contents();

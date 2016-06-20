@@ -46,13 +46,14 @@ class route implements ibasic
     //$_GET, $_POST, $_COOKIE
     private $REQUEST;
 
-    //Private
-    public $sense = array ( "domain" => "", "base" => "", "route" => array (), "variables" => array (), "protocol" => "", "port" => "" );
+    public $working_directory = "";
+    public $sense = array ( "domain" => "", "base" => "", "path" => array (), "variables" => array (), "anchor" => "", "protocol" => "", "port" => "" );
 
     function __construct()
     {
         $this->initStatic();
         $this->initDynamic();
+        $this->processRoute ();
     }
 
     private function initStatic ()
@@ -116,18 +117,24 @@ class route implements ibasic
         $path_abstract = rtrim ( $path_abstract, '/' );
         if ( $path_abstract === "/" || $path_abstract === "" )
         {
-            $this -> sense [ "route" ] = array ( 0 => "/" );
+            $this -> sense [ "path" ] = array ( 0 => "/" );
         }
         else
         {
-            $this -> sense [ "route" ] = explode( "/", $path_abstract );
-            array_unshift ( $this -> sense [ "route" ], "/" );
+            $this -> sense [ "path" ] = explode( "/", $path_abstract );
+            array_unshift ( $this -> sense [ "path" ], "/" );
         }
+
+        $executed_file_path = $_SERVER [ "SCRIPT_NAME" ];
+        $break = explode ( '/', $executed_file_path );
+        $executed_file_name = $break [ count ( $break ) - 1 ];
+        $this -> working_directory = rtrim ( str_replace ( $executed_file_name, "", $_SERVER [ 'SCRIPT_FILENAME' ] ), "/" );
+
     }
 
     function getRoute ()
     {
-        return $this -> sense [ "route" ];
+        return $this -> sense [ "path" ];
     }
     
     function getDomain ()
@@ -138,6 +145,78 @@ class route implements ibasic
     function getPort()
     {
         // TODO: Implement getPort() method.
+    }
+
+    function processRoute ()
+    {
+        $filesystem_target = $this -> working_directory;
+        $path_extended = array ();
+        $pathitem_properties = array ( "name" => "", "type" => "", "filepath" => "" );
+        foreach ( $this -> sense [ "path" ] as $pathitem_index => $pathitem_name )
+        {
+            $pathitem_properties [ "name" ] = $pathitem_name;
+            if ( $pathitem_index > 0 )
+            {
+                $filesystem_target .= "/" . $pathitem_name;
+                $isSubdomain = $this -> isSubdomain ( $filesystem_target );
+                if ( is_array ( $isSubdomain ) )
+                {
+                    $pathitem_properties [ "type" ] = "subdomain";
+                    $pathitem_properties [ "properties" ] = $isSubdomain [ "properties" ];
+                    $pathitem_properties [ "filepath" ] = $filesystem_target;
+                }
+                else
+                {
+                    $filesystem_target = $this -> working_directory . "/controllers/" . $pathitem_name . ".php";
+                    $isController = $this -> isController ( $filesystem_target );
+                    if ( is_array ( $isController ) )
+                    {
+                        $pathitem_properties [ "type" ] = "controller";
+                        $pathitem_properties [ "properties" ] = $isController [ "properties" ];
+                        $pathitem_properties [ "filepath" ] = $filesystem_target;
+                    }
+                    else
+                    {
+                        $pathitem_properties [ "type" ] = false;
+                        $pathitem_properties [ "properties" ] = false;
+                        $pathitem_properties [ "filepath" ]  = false;
+                        break;
+                    }
+                }
+                $path_extended [] = $pathitem_properties;
+            }
+        }
+
+        ob_start();
+        var_dump($path_extended);
+        $dump = ob_get_contents();
+        ob_end_clean();
+        echo "<pre> $dump </pre>";
+    }
+
+    function isSubdomain ( $filesystem_target )
+    {
+        if ( is_dir ( $filesystem_target ) )
+        {
+            $result = array ( "type" => "subdomain", "properties" => array ( "mode" => "folder" ) );
+            return $result;
+        }
+        else //TODO: Logical subdomain is lehet. Saját könyvtár nélkül.
+            return false;
+    }
+
+    function isController ( $filesystem_target )
+    {
+        if ( is_file ( $filesystem_target ) )
+        {
+            $result = array ( "type" => "controller", "properties" => array ( "mode" => "file", "owner" => "common" ) );
+            return $result;
+        }
+        else //TODO: Logikai controller -nek van értelme? Nem létezik hozzá php file? Azt viszont ki kell dolgozni, hogy owner = private és a file a subdomain könyvtárban van
+        {
+            return false;
+        }
+
     }
 
     function __destruct()

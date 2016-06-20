@@ -14,3 +14,9 @@ interface ibasic
     public function __destruct ();
 }
 
+
+interface iadvanced
+{
+    public function __construct ( $object );
+    public function __destruct ();
+}
