@@ -7,20 +7,32 @@
  */
 
 require_once('core/interfaces.php');
+require_once('core/filesystem.php');
 require_once('core/route.php');
 require_once('core/dispatcher.php');
 
 use improwerk\implement\mvcd as mvcd;
 
-$route = new mvcd\route ();
+$filesystem = new mvcd\filesystem ();
+$route = new mvcd\route ( $filesystem );
 $dispatcher = new mvcd\dispatcher ( $route );
 
-//print $route -> working_directory;
+print ($filesystem->working_directory."<br>");
+print ($route -> url . "<br>");
+
 ob_start();
+var_dump ( $route -> sense );
+$dump = ob_get_contents ();
+ob_end_clean ();
+echo "<pre> $dump </pre>";
+
+
+/*ob_start();
 var_dump($route->sense);
 $dump = ob_get_contents();
 ob_end_clean();
-echo "<pre> $dump </pre>";
+echo "<pre> $dump </pre>";*/
+
 /*echo "<hr>";
 ob_start();
 var_dump($_SERVER);

@@ -9,7 +9,7 @@
 namespace improwerk\implement\mvcd;
 
 
-class route implements ibasic
+class route implements iadvanced
 {
     //$_SERVER
     private $DOCUMENT_ROOT;
@@ -46,11 +46,14 @@ class route implements ibasic
     //$_GET, $_POST, $_COOKIE
     private $REQUEST;
 
-    public $working_directory = "";
+    //public $working_directory = "";
     public $sense = array ( "domain" => "", "base" => "", "path" => array (), "variables" => array (), "anchor" => "", "protocol" => "", "port" => "" );
+    public $url = "";
+    private $filesystem;
 
-    function __construct()
+    function __construct ( $filesystem )
     {
+        $this->filesystem = $filesystem;
         $this->initStatic();
         $this->initDynamic();
         $this->processRoute ();
@@ -103,6 +106,7 @@ class route implements ibasic
 
     private function initDynamic ()
     {
+        $this -> url = $this -> HTTP_HOST . $this -> REQUEST_URI;
         if ( strpos ( $this -> REQUEST_URI, "?" ) === false )
             $temp [ 0 ] = $this -> REQUEST_URI;
         else
@@ -125,10 +129,10 @@ class route implements ibasic
             array_unshift ( $this -> sense [ "path" ], "/" );
         }
 
-        $executed_file_path = $_SERVER [ "SCRIPT_NAME" ];
+/*        $executed_file_path = $_SERVER [ "SCRIPT_NAME" ];
         $break = explode ( '/', $executed_file_path );
         $executed_file_name = $break [ count ( $break ) - 1 ];
-        $this -> working_directory = rtrim ( str_replace ( $executed_file_name, "", $_SERVER [ 'SCRIPT_FILENAME' ] ), "/" );
+        $this -> working_directory = rtrim ( str_replace ( $executed_file_name, "", $_SERVER [ 'SCRIPT_FILENAME' ] ), "/" );*/
 
     }
 
@@ -149,7 +153,7 @@ class route implements ibasic
 
     function processRoute ()
     {
-        $filesystem_target = $this -> working_directory;
+        $filesystem_target = $this->filesystem->getcwd();
         $path_extended = array ();
         $pathitem_properties = array ( "name" => "", "type" => "", "filepath" => "" );
         foreach ( $this -> sense [ "path" ] as $pathitem_index => $pathitem_name )
@@ -187,11 +191,8 @@ class route implements ibasic
             }
         }
 
-        ob_start();
-        var_dump($path_extended);
-        $dump = ob_get_contents();
-        ob_end_clean();
-        echo "<pre> $dump </pre>";
+        $this -> sense ['path'] = $path_extended;
+
     }
 
     function isSubdomain ( $filesystem_target )
