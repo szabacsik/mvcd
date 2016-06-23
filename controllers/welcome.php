@@ -2,16 +2,17 @@
 /**
  * Created by PhpStorm.
  * User: andra
- * Date: 2016. 06. 20.
- * Time: 17:05
+ * Date: 2016. 06. 23.
+ * Time: 13:52
  */
+
 namespace improwerk\implement\mvcd;
 
-class main implements ibasic
+class welcome implements ibasic
 {
     public function __construct ()
     {
-        Print ( "You have reached the main controller." );
+        Print ( "Welcome! You have reached the landing page." );
     }
 
     public function __destruct ()

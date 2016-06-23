@@ -20,3 +20,9 @@ interface iadvanced
     public function __construct ( $object );
     public function __destruct ();
 }
+
+interface interface_controller
+{
+    public function __construct ( $route );
+    public function __destruct();
+}

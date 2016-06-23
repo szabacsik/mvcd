@@ -26,6 +26,11 @@ class filesystem implements ibasic
         return $this -> working_directory;
     }
 
+    public function debug ()
+    {
+        print ( "working directory: " . $this -> working_directory."<br>");
+    }
+
     public function __destruct()
     {
         // TODO: Implement __destruct() method.
