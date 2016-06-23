@@ -46,10 +46,9 @@ class route implements iadvanced
     //$_GET, $_POST, $_COOKIE
     private $REQUEST;
 
-    //public $working_directory = "";
-    public $sense = array ( "domain" => "", "base" => "", "path" => array (), "variables" => array (), "anchor" => "", "protocol" => "", "port" => "" );
+    public $sense = array ( "domain" => "", "base" => "", "pathitem" => array (), "variables" => array (), "anchor" => "", "protocol" => "", "port" => "" );
     public $url = "";
-    private $filesystem;
+    public $filesystem;
 
     function __construct ( $filesystem )
     {
@@ -121,12 +120,12 @@ class route implements iadvanced
         $path_abstract = rtrim ( $path_abstract, '/' );
         if ( $path_abstract === "/" || $path_abstract === "" )
         {
-            $this -> sense [ "path" ] = array ( 0 => "/" );
+            $this -> sense [ "pathitem" ] = array ( 0 => "/" );
         }
         else
         {
-            $this -> sense [ "path" ] = explode( "/", $path_abstract );
-            array_unshift ( $this -> sense [ "path" ], "/" );
+            $this -> sense [ "pathitem" ] = explode( "/", $path_abstract );
+            array_unshift ( $this -> sense [ "pathitem" ], "/" );
         }
 
 /*        $executed_file_path = $_SERVER [ "SCRIPT_NAME" ];
@@ -138,13 +137,52 @@ class route implements iadvanced
 
     function getRoute ()
     {
-        return $this -> sense [ "path" ];
+        return $this -> sense [ "pathitem" ];
     }
     
     function getDomain ()
     {
         return $this -> sense [ "domain" ];
     }
+
+    function getSubdomains ()
+    {
+        $result = false;
+        foreach ( $this -> sense [ "pathitem" ] as $pathitem )
+        {
+            if ( $pathitem [ "type" ] ==  "subdomain" )
+            {
+                $result [] = $pathitem;
+            }
+            else
+            {
+                break;
+            }
+        }
+
+        return $result;
+
+    }
+
+    function getParameters ()
+    {
+        $result = false;
+        foreach ( $this -> sense [ "pathitem" ] as $pathitem )
+        {
+            if ( $pathitem [ "type" ] ==  "parameter" )
+            {
+                $result [] = $pathitem;
+            }
+            else
+            {
+               // break;
+            }
+        }
+
+        return $result;
+
+    }
+
 
     function getPort()
     {
@@ -153,71 +191,105 @@ class route implements iadvanced
 
     function processRoute ()
     {
-        $filesystem_target = $this->filesystem->getcwd();
-        $path_extended = array ();
-        $pathitem_properties = array ( "name" => "", "type" => "", "filepath" => "" );
-        foreach ( $this -> sense [ "path" ] as $pathitem_index => $pathitem_name )
+        $pathitem_relative_path = "/";
+        $full_path_extended_properties = array ();
+        $pathitem_properties = array ( "name" => "", "type" => "", "properties" => array (), "filepath" => "" );
+        foreach ( $this -> sense [ "pathitem" ] as $pathitem_index => $pathitem_name )
         {
+            $pathitem_relative_path .= $pathitem_name . "/";
+            $pathitem_relative_path = preg_replace('~/+~', '/', $pathitem_relative_path );
+            #print ( "<br>relative: " . $pathitem_relative_path . "<br>");
             $pathitem_properties [ "name" ] = $pathitem_name;
+            //$pathitem_properties [ "filepath" ] = $pathitem_relative_path;
+            //print ( "<br> -> " . $pathitem_properties [ "filepath" ] . " <- <br>" );
             if ( $pathitem_index > 0 )
             {
-                $filesystem_target .= "/" . $pathitem_name;
-                $isSubdomain = $this -> isSubdomain ( $filesystem_target );
+                $isSubdomain = $this -> isSubdomain ( $pathitem_relative_path );
                 if ( is_array ( $isSubdomain ) )
                 {
                     $pathitem_properties [ "type" ] = "subdomain";
                     $pathitem_properties [ "properties" ] = $isSubdomain [ "properties" ];
-                    $pathitem_properties [ "filepath" ] = $filesystem_target;
+                    $pathitem_properties [ "filepath" ] = $isSubdomain [ "filepath" ];
                 }
                 else
                 {
-                    $filesystem_target = $this -> working_directory . "/controllers/" . $pathitem_name . ".php";
-                    $isController = $this -> isController ( $filesystem_target );
+                    $isController = $this -> isController ( $pathitem_relative_path );
                     if ( is_array ( $isController ) )
                     {
                         $pathitem_properties [ "type" ] = "controller";
                         $pathitem_properties [ "properties" ] = $isController [ "properties" ];
-                        $pathitem_properties [ "filepath" ] = $filesystem_target;
+                        $pathitem_properties [ "filepath" ] = $isController [ "filepath" ];
                     }
                     else
                     {
-                        $pathitem_properties [ "type" ] = false;
+                        $pathitem_properties [ "type" ] = "parameter";
                         $pathitem_properties [ "properties" ] = false;
                         $pathitem_properties [ "filepath" ]  = false;
-                        break;
+                        //break;
                     }
                 }
-                $path_extended [] = $pathitem_properties;
+                $full_path_extended_properties [] = $pathitem_properties;
             }
         }
 
-        $this -> sense ['path'] = $path_extended;
+        $this -> sense ["pathitem"] = $full_path_extended_properties;
 
     }
 
-    function isSubdomain ( $filesystem_target )
+    function isSubdomain ( $pathitem_relative_path )
     {
+        $filesystem_target = $this -> filesystem -> getcwd () . "/subdomains" . $pathitem_relative_path;
         if ( is_dir ( $filesystem_target ) )
         {
-            $result = array ( "type" => "subdomain", "properties" => array ( "mode" => "folder" ) );
+            $result = array ( "type" => "subdomain", "properties" => array ( "mode" => "folder" ), "filepath" => $filesystem_target );
             return $result;
         }
-        else //TODO: Logical subdomain is lehet. Saját könyvtár nélkül.
+        else //TODO: Logical subdomain without folder.
             return false;
     }
 
-    function isController ( $filesystem_target )
+    function isController ( $pathitem_relative_path )
     {
-        if ( is_file ( $filesystem_target ) )
+        $pathitem_name = end ( explode ( "/", $pathitem_relative_path ) );
+        //$pathitem_name = substr ( $pathitem_relative_path, strrpos ( $pathitem_relative_path, '/' ) + 1 );
+        if ( !$pathitem_name )
         {
-            $result = array ( "type" => "controller", "properties" => array ( "mode" => "file", "owner" => "common" ) );
-            return $result;
-        }
-        else //TODO: Logikai controller -nek van értelme? Nem létezik hozzá php file? Azt viszont ki kell dolgozni, hogy owner = private és a file a subdomain könyvtárban van
-        {
-            return false;
+            $pathitem_name = end ( explode ( "/", rtrim ( $pathitem_relative_path, '/' ) ) );
+            //$pathitem_name = substr ( $pathitem_relative_path, strrpos ( rtrim ( $pathitem_relative_path, '/' ), '/' ) + 1 );
         }
 
+        $filesystem_target = $this -> filesystem -> getcwd () . "/controllers/" . $pathitem_name . ".php";
+        if ( is_file ( $filesystem_target ) )
+        {
+            $result = array ( "type" => "controller", "properties" => array ( "mode" => "file", "owner" => "common" ), "filepath" => $filesystem_target );
+            return $result;
+        }
+        else //TODO: Logical controller without file.
+        {
+            $filesystem_target = $this -> filesystem -> getcwd () . "/subdomains" . rtrim ( $pathitem_relative_path, $pathitem_name . "/" ) . "/" . $pathitem_name . ".php";
+            if ( is_file ( $filesystem_target ) )
+            {
+                $result = array ( "type" => "controller", "properties" => array ( "mode" => "file", "owner" => "private" ), "filepath" => $filesystem_target );
+                return $result;
+            }
+            else
+            {
+                return false;
+            }
+        }
+    }
+
+    function debug ()
+    {
+        print ( "url: " . $this -> url . "<br>");
+        print ( '<br>$route -> sense');
+        ob_start();
+        var_dump ( $this -> sense );
+        $dump = ob_get_contents ();
+        ob_end_clean ();
+        $dump = str_replace ( '["', '<span style="color:red; font-weight: bold;">["', $dump );
+        $dump = str_replace ( '"]', '"]</span>', $dump );
+        echo "<pre> $dump </pre>";
     }
 
     function __destruct()
