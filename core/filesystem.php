@@ -13,7 +13,7 @@ class filesystem implements ibasic
 {
 
     public $working_directory = "";
-    public function __construct()
+    public function __construct ()
     {
         $executed_file_path = $_SERVER [ "SCRIPT_NAME" ];
         $break = explode ( '/', $executed_file_path );
@@ -28,7 +28,7 @@ class filesystem implements ibasic
 
     public function debug ()
     {
-        print ( "working directory: " . $this -> working_directory."<br>");
+        print ( "<br>working directory: " . $this -> working_directory."<br>");
     }
 
     public function __destruct()

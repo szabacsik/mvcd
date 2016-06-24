@@ -11,10 +11,50 @@ namespace improwerk\implement\mvcd;
 
 class configuration implements ibasic
 {
-    public $subdomains_relative_folder = 'subdomains';
-    public $controllers_relative_folder = 'controllers';
-    public $security_private_controller_enabled = false;
-    public $default_controller = 'front.php';
+    //Global
+    public $core = array
+    (
+        "default_application" => "demo",
+        "default_controller"  => "front",
+        "namespace"           => 'improwerk\implement\mvcd\\'
+    );
+
+    //Filesystem
+    public $filesystem = array
+    (
+        "relative_folders" => array
+        (
+            "applications" => "applications",
+            "subdomains"   => "subdomains",
+            "controllers"  => "controllers",
+            "users"        => "users"
+        )
+    );
+
+    //Security
+    public $security = array
+    (
+        "private_controllers" => disabled
+    );
+
+    //Applications
+    public $applications = array
+    (
+        "model_prefix" => "model_",
+        "view_prefix" => "view_",
+        "control_prefix" => "control_"
+    );
+
+    public function get ()
+    {
+        return array
+        (
+            "core" => $this -> core,
+            "filesystem" => $this -> filesystem,
+            "security" => $this -> security
+        );
+    }
+
     public function __construct()
     {
     }

@@ -26,3 +26,15 @@ interface interface_controller
     public function __construct ( $route );
     public function __destruct();
 }
+
+interface interface_dispatcher
+{
+    public function __construct ( $configuration, $filesystem, $route );
+    public function __destruct();
+}
+
+interface interface_route
+{
+    public function __construct ( $configuration, $filesystem );
+    public function __destruct();
+}

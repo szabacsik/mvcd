@@ -9,22 +9,29 @@
 namespace improwerk\implement\mvcd;
 
 
-class dispatcher implements iadvanced
+class dispatcher implements interface_dispatcher
 {
     private $route;
+    private $configuration;
+    private $filesystem;
 
-    private $engine_namespace = "";
     private $controller_class_name = "";
     private $controller_class_path = "";
     private $controller_instance = false;
 
-    public function __construct ( $route )
+    private $application_name = '';
+    private $application_model = false;
+    private $application_view = false;
+    private $application_controller = false;
+
+    public function __construct ( $configuration, $filesystem, $route )
     {
 
+        $this -> configuration = $configuration;
+        $this -> filesystem = $filesystem;
         $this -> route = $route;
-        $this -> engine_namespace = 'improwerk\implement\mvcd\\';
-        $this -> controller_class_name = 'front';
-        $this -> controller_class_path = $this -> route -> filesystem -> getcwd () . "/controllers/" . $this -> controller_class_name . ".php";
+        $this -> controller_class_name = $this -> configuration -> core [ "default_controller" ];
+        $this -> controller_class_path = $this -> filesystem -> getcwd () . "/" . $this -> configuration -> filesystem [ "relative_folders" ] [ "controllers" ] . "/" . $this -> controller_class_name . ".php";
 
         if ( $this -> route -> getRoute () )
         {
@@ -38,7 +45,7 @@ class dispatcher implements iadvanced
                         $this -> controller_class_path = $pathitem [ "filepath" ];
                         break;
                     }
-                    elseif ( $pathitem [ "properties" ][ "owner" ] == "private" )
+                    elseif ( $pathitem [ "properties" ][ "owner" ] == "private" && $this -> configuration -> security [ "private_controllers" ] == enabled )
                         {
                             //TODO: If private controllers are enabled, delegate
                         }
@@ -52,7 +59,7 @@ class dispatcher implements iadvanced
 
     private function delegate ()
     {
-        $classname = $this -> engine_namespace . $this -> controller_class_name;
+        $classname = $this -> configuration -> core [ "namespace" ] . $this -> controller_class_name;
         require_once ( $this -> controller_class_path );
         $this -> controller_instance = new $classname ( $this -> route );
     }

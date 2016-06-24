@@ -9,7 +9,7 @@
 namespace improwerk\implement\mvcd;
 
 
-class route implements iadvanced
+class route implements interface_route
 {
     //$_SERVER
     private $DOCUMENT_ROOT;
@@ -48,14 +48,17 @@ class route implements iadvanced
 
     public $sense = array ( "domain" => "", "base" => "", "pathitem" => array (), "variables" => array (), "anchor" => "", "protocol" => "", "port" => "" );
     public $url = "";
-    public $filesystem;
+    private $configuration;
+    private $filesystem;
 
-    function __construct ( $filesystem )
+    function __construct ( $configuration, $filesystem )
     {
+        $this->configuration = $configuration;
         $this->filesystem = $filesystem;
         $this->initStatic();
         $this->initDynamic();
-        $this->processRoute ();
+        //$this->processRoute ();
+        $this->reverse_process ();
     }
 
     private function initStatic ()
@@ -98,9 +101,9 @@ class route implements iadvanced
         $this -> argc                           = $_SERVER [ 'argc' ];
         $this -> REQUEST                        = $_REQUEST;
 
-        $this -> sense [ "variables" ] = $this -> REQUEST;
-        $this->sense [ "port" ]        = $this -> SERVER_PORT;
-        $this->sense [ "protocol" ]    = $this -> SERVER_PROTOCOL;
+        $this -> sense [ "variables" ]   = $this -> REQUEST;
+        $this -> sense [ "port" ]        = $this -> SERVER_PORT;
+        $this -> sense [ "protocol" ]    = $this -> SERVER_PROTOCOL;
     }
 
     private function initDynamic ()
@@ -128,10 +131,12 @@ class route implements iadvanced
             array_unshift ( $this -> sense [ "pathitem" ], "/" );
         }
 
-/*        $executed_file_path = $_SERVER [ "SCRIPT_NAME" ];
+/*
+        $executed_file_path = $_SERVER [ "SCRIPT_NAME" ];
         $break = explode ( '/', $executed_file_path );
         $executed_file_name = $break [ count ( $break ) - 1 ];
-        $this -> working_directory = rtrim ( str_replace ( $executed_file_name, "", $_SERVER [ 'SCRIPT_FILENAME' ] ), "/" );*/
+        $this -> working_directory = rtrim ( str_replace ( $executed_file_name, "", $_SERVER [ 'SCRIPT_FILENAME' ] ), "/" );
+*/
 
     }
 
@@ -189,6 +194,45 @@ class route implements iadvanced
         // TODO: Implement getPort() method.
     }
 
+    private function reverse_process ()
+    {
+        $pathitem_relative_path = "/";
+        $full_path_extended_properties = array ();
+        $path_item_properties = array ( "name" => "", "type" => "", "properties" => array (), "filepath" => "" );
+        $path_item_application_index = false;
+        print ("<br><hr>");
+
+
+        foreach ( array_reverse ( $this -> sense [ "pathitem" ], true ) as $path_item_index => $path_item_name )
+        {
+            if ( $this -> is_application ( $path_item_name ) )
+            {
+                $path_item_application_index = $path_item_index;
+            }
+            else
+            {
+                if ( $path_item_application_index !== false )
+                {
+
+                }
+            }
+        }
+
+        print ("<br><hr><br><br>");
+    }
+
+    private function is_application ( $path_item_name )
+    {
+        $filesystem_target = $this -> filesystem -> getcwd () . "/" . $this -> configuration -> filesystem [ "relative_folders" ] [ "applications" ] . "/" . $path_item_name;
+        if ( is_dir ( $filesystem_target ) )
+        {
+            $result = array ( "type" => "application", "properties" => array ( "mode" => "folder", "owner" => "common" ), "filepath" => $filesystem_target );
+            return $result;
+        }
+        else
+            return false;
+    }
+
     function processRoute ()
     {
         $pathitem_relative_path = "/";
@@ -213,20 +257,31 @@ class route implements iadvanced
                 }
                 else
                 {
-                    $isController = $this -> isController ( $pathitem_relative_path );
-                    if ( is_array ( $isController ) )
+                    $isApplication = $this -> isApplication ( $pathitem_relative_path );
+                    if ( is_array($isApplication))
                     {
-                        $pathitem_properties [ "type" ] = "controller";
-                        $pathitem_properties [ "properties" ] = $isController [ "properties" ];
-                        $pathitem_properties [ "filepath" ] = $isController [ "filepath" ];
+                        $pathitem_properties [ "type" ] = "application";
+                        $pathitem_properties [ "properties" ] = $isApplication [ "properties" ];
+                        $pathitem_properties [ "filepath" ] = $isApplication [ "filepath" ];
                     }
                     else
                     {
-                        $pathitem_properties [ "type" ] = "parameter";
-                        $pathitem_properties [ "properties" ] = false;
-                        $pathitem_properties [ "filepath" ]  = false;
-                        //break;
+                        $isController = $this -> isController ( $pathitem_relative_path );
+                        if ( is_array ( $isController ) )
+                        {
+                            $pathitem_properties [ "type" ] = "controller";
+                            $pathitem_properties [ "properties" ] = $isController [ "properties" ];
+                            $pathitem_properties [ "filepath" ] = $isController [ "filepath" ];
+                        }
+                        else
+                        {
+                            $pathitem_properties [ "type" ] = "parameter";
+                            $pathitem_properties [ "properties" ] = false;
+                            $pathitem_properties [ "filepath" ]  = false;
+                            //break;
+                        }
                     }
+
                 }
                 $full_path_extended_properties [] = $pathitem_properties;
             }
@@ -236,9 +291,32 @@ class route implements iadvanced
 
     }
 
+    private function isApplication ( $pathitem_relative_path )
+    {
+        $pathitem_name = end ( explode ( "/", $pathitem_relative_path ) );
+        //$pathitem_name = substr ( $pathitem_relative_path, strrpos ( $pathitem_relative_path, '/' ) + 1 );
+        if ( !$pathitem_name )
+        {
+            $pathitem_name = end ( explode ( "/", rtrim ( $pathitem_relative_path, '/' ) ) );
+            //$pathitem_name = substr ( $pathitem_relative_path, strrpos ( rtrim ( $pathitem_relative_path, '/' ), '/' ) + 1 );
+        }
+
+        $filesystem_target = $this -> filesystem -> getcwd () . "/" . $this -> configuration -> filesystem [ "relative_folders" ] [ "applications" ] . "/" . $pathitem_name;
+        Print ( "<br>looking for: " . $filesystem_target . "<br>" );
+
+        if ( is_dir ( $filesystem_target ) )
+        {
+            $result = array ( "type" => "application", "properties" => array ( "mode" => "folder", "owner" => "private" ), "filepath" => $filesystem_target );
+            return $result;
+        }
+        else
+            return false;
+
+    }
+
     function isSubdomain ( $pathitem_relative_path )
     {
-        $filesystem_target = $this -> filesystem -> getcwd () . "/subdomains" . $pathitem_relative_path;
+        $filesystem_target = $this -> filesystem -> getcwd () . "/" . $this -> configuration -> filesystem [ "relative_folders" ] [ "subdomains" ] . $pathitem_relative_path;
         if ( is_dir ( $filesystem_target ) )
         {
             $result = array ( "type" => "subdomain", "properties" => array ( "mode" => "folder" ), "filepath" => $filesystem_target );
@@ -281,6 +359,7 @@ class route implements iadvanced
 
     function debug ()
     {
+        print ("<hr>");
         print ( "url: " . $this -> url . "<br>");
         print ( '<br>$route -> sense');
         ob_start();
