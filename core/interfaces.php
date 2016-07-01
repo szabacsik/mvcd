@@ -38,3 +38,14 @@ interface interface_route
     public function __construct ( $configuration, $filesystem );
     public function __destruct();
 }
+
+interface interface_path_item
+{
+/*    private $name = "";
+    private $type;
+    private $parent;
+    private $sibling;
+    private $properties = array ();*/
+    public function __construct ();
+    public function __destruct ();
+}

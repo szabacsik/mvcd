@@ -24,7 +24,8 @@ class configuration implements ibasic
     (
         "relative_folders" => array
         (
-            "applications" => "applications",
+            "private_applications" => "applications",
+            "common_applications" => "applications",
             "subdomains"   => "subdomains",
             "controllers"  => "controllers",
             "users"        => "users"
