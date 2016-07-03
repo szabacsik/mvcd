@@ -55,12 +55,12 @@ class route implements interface_route
     {
         $this -> configuration = $configuration;
         $this -> filesystem = $filesystem;
-        $this -> initStatic ();
-        $this -> initDynamic ();
+        $this -> init_static ();
+        $this -> init_dynamic ();
         $this -> reverse_process ();
     }
 
-    private function initStatic ()
+    private function init_static ()
     {
         $this -> HTTP_HOST                      = $_SERVER [ 'HTTP_HOST' ];
         $this -> SERVER_NAME                    = $_SERVER [ 'SERVER_NAME' ];
@@ -105,21 +105,8 @@ class route implements interface_route
         $this -> sense [ "protocol" ]    = $this -> SERVER_PROTOCOL;
     }
 
-    private function initDynamic ()
+    private function init_dynamic ()
     {
-
-/*
-        $url = 'http://username:password@hostname:9090/path?arg=value#anchor';
-        var_dump(parse_url($url));
-        var_dump(parse_url($url, PHP_URL_SCHEME));
-        var_dump(parse_url($url, PHP_URL_USER));
-        var_dump(parse_url($url, PHP_URL_PASS));
-        var_dump(parse_url($url, PHP_URL_HOST));
-        var_dump(parse_url($url, PHP_URL_PORT));
-        var_dump(parse_url($url, PHP_URL_PATH));
-        var_dump(parse_url($url, PHP_URL_QUERY));
-        var_dump(parse_url($url, PHP_URL_FRAGMENT));
-*/
 
         $this -> url = $this -> HTTP_HOST . $this -> REQUEST_URI;
         if ( strpos ( $this -> REQUEST_URI, "?" ) === false )
@@ -146,17 +133,17 @@ class route implements interface_route
 
     }
 
-    function getRoute ()
+    function get_route ()
     {
         return $this -> sense [ "pathitem" ];
     }
     
-    function getDomain ()
+    function get_domain ()
     {
         return $this -> sense [ "domain" ];
     }
 
-    function getSubdomains ()
+    function get_subdomains ()
     {
         $result = false;
         foreach ( $this -> sense [ "pathitem" ] as $pathitem )
@@ -175,7 +162,7 @@ class route implements interface_route
 
     }
 
-    function getParameters ()
+    function get_parameters ()
     {
         $result = false;
         foreach ( $this -> sense [ "pathitem" ] as $pathitem )
@@ -194,63 +181,56 @@ class route implements interface_route
 
     }
 
-
-    function getPort()
+    function get_port()
     {
-        // TODO: Implement getPort() method.
+        return $this -> sense [ "port" ];
     }
 
     private function reverse_process ()
     {
-        print ("<br><hr><br>Start Reverse Process<br>");
 
         if ( count ( $this -> sense [ "pathitem"] ) > 1 && $this -> sense [ "pathitem"] != "/" )
         {
+
             $full_path_extended_properties = array ();
-            $path_item_properties = array ( "name" => "", "type" => "", "filepath" => "", "properties" => array () );
-            $path_item_common_application_index = false;
-            $path_item_private_application_index = false;
+
             foreach ( array_reverse ( $this -> sense [ "pathitem" ], true ) as $path_item_index => $path_item_name )
             {
                 $is_common_application = $this -> is_common_application ( $path_item_name );
                 $sub_path_items = array_slice ( $this -> sense ["pathitem"], 0, $path_item_index + 1 );
                 $is_private_application = $this -> is_private_application ( $sub_path_items );
-                if ( is_array ( $is_common_application ) )
+
+                if ( is_array ( $is_common_application ) || is_array ( $is_private_application ) )
                 {
-                    Print ("<br><br>deep process common app<br>");
-                    $path_item_common_application_index = $path_item_index;
-                    $full_path_extended_properties [ $path_item_index ] = $is_common_application;
-                    $sub_path_items = array_slice ( $this -> sense ["pathitem"], $path_item_common_application_index + 1, count ( $this -> sense ["pathitem"] ) - 2 );
-                    $sub_path_properties = $this -> pathalyzer ( $is_common_application, $sub_path_items );
+                    $path_item_application_index = $path_item_index;
+                    if ( is_array ( $is_common_application ) )
+                    {
+                        $full_path_extended_properties [ $path_item_index ] = $is_common_application;
+                        $parent = $is_common_application;
+                    }
+                    else
+                    {
+                        $full_path_extended_properties [ $path_item_index ] = $is_private_application;
+                        $parent = $is_private_application;
+                    }
+
+                    $sub_path_items = array_slice ( $this -> sense ["pathitem"], $path_item_application_index + 1, count ( $this -> sense ["pathitem"] ) - 2 );
+                    $sub_path_properties = $this -> pathalyzer ( $parent, $sub_path_items );
                     $sub_path_item_index = 0;
-                    print ("<br>sub path properties:<br>");
-                    var_dump($sub_path_properties);
-                    print ("<br>");
+
                     foreach ( $sub_path_properties as $sub_path_item_properties )
                     {
                         $sub_path_item_index++;
                         $full_path_extended_properties [ $path_item_index + $sub_path_item_index ] = $sub_path_item_properties;
                     }
 
-                    Print ("<br>common app: " . $path_item_name . "<br>");
                 }
                 else
                 {
-//                    $full_path_extended_properties [$path_item_index] = $this->sense ["pathitem"] [$path_item_index];
                     $sub_path_items = array_slice ( $this -> sense ["pathitem"], 0, $path_item_index + 1 );
                     $is_subdomain = $this -> is_subdomain ( $sub_path_items );
                     if ( is_array ( $is_subdomain ) )
                     {
-                        Print ("<br>SUBDOMAIN FOUND<br><br>");
-                        print ("var dump is subdomain:<br><br>");
-                        ob_start();
-                        var_dump ( $is_subdomain );
-                        $dump = ob_get_contents ();
-                        ob_end_clean ();
-                        $dump = str_replace ( '["', '<span style="color:red; font-weight: bold;">["', $dump );
-                        $dump = str_replace ( '"]', '"]</span>', $dump );
-                        echo "<pre> $dump </pre>";
-
 
                         $sub_path_item_index = 0;
                         foreach ( $is_subdomain as $sub_path_item_properties )
@@ -258,8 +238,6 @@ class route implements interface_route
                             $full_path_extended_properties [ $sub_path_item_index ] = $sub_path_item_properties;
                             $sub_path_item_index++;
                         }
-
-                        Print ("<br><br>BREAK HERE!!!<br><br>");
 
                         break;
 
@@ -273,113 +251,30 @@ class route implements interface_route
                                                         "properties" => false );
                         $full_path_extended_properties [ $path_item_index ] = $path_item_properties;
                     }
-//                    var_dump($sub_path_items);
+
                 }
-
-                /*
-                  if ( is_array ( $is_private_application ) )
-                {
-                    $path_item_private_application_index = $path_item_index;
-                    $full_path_extended_properties [ $path_item_index ] = $is_private_application;
-                    Print ("<br>private app: " . $path_item_name . "<br>");
-                }
-                */
-
-                //$is_subdomain = $this -> is_subdomain ();
-
-                //$full_path_extended_properties [] = $pathitem_properties;
             }
 
-            //$is_common_application = $this -> is_common_application ( $path_item_name );
-
-            ksort ( &$full_path_extended_properties );
+            ksort ( $full_path_extended_properties );
 
             $this -> sense ["pathitem"] = $full_path_extended_properties;
-            print ("<br><br>");
-            ob_start();
-            var_dump ( array_reverse ( $this -> sense [ "pathitem" ], true ) );
-            $dump = ob_get_contents ();
-            ob_end_clean ();
-            $dump = str_replace ( '["', '<span style="color:red; font-weight: bold;">["', $dump );
-            $dump = str_replace ( '"]', '"]</span>', $dump );
-            echo "<pre> $dump </pre>";
-            print ("<br><br>End Reverse Process<br><hr><br>");
 
-            exit;
-
-            foreach ( array_reverse ( $this -> sense [ "pathitem" ], true ) as $path_item_index => $path_item_name )
-            {
-                $pathitem_properties [ "name" ] = $path_item_name;
-                if ( $path_item_name !== '/' )
-                {
-                    print ('<hr><strong>Loop index (' . $path_item_index . ')</strong><br>');
-                    print ("<br>path_item_name:<br>" . $path_item_name . "<br>");
-                    $sub_path_items = array_slice ( $this -> sense ["pathitem"], 0, $path_item_index + 1 );
-                    print ( "<br>sub_path_items<br>" );
-                    var_dump ( $sub_path_items );
-                    $is_common_application = $this -> is_common_application ( $path_item_name );
-                    $is_private_application = $this -> is_private_application ( $sub_path_items );
-                    $is_subdomain = $this -> is_subdomain ( $sub_path_items );
-
-                    if ( $is_common_application )
-                    {
-                        $path_item_application_index = $path_item_index;
-                        $path_item_properties = $is_application;
-                    }
-                    else
-                    {
-                        if ( $is_private_application )
-                        {
-                            $path_item_properties = $is_private_application;
-                        }
-                        else
-                        {
-                            if ( $is_subdomain )
-                            {
-                                $path_item_properties = $is_subdomain;
-                            }
-                            else
-                            {
-                                $path_item_properties ["name"] = $path_item_name;
-                                $path_item_properties ["type"] = "parameter";
-                                $path_item_properties ["properties"] = false;
-                                $path_item_properties ["filepath"] = false;
-                            }
-                        }
-                    }
-                }
-                else
-                {
-                    $pathitem_properties [ "type" ] = "root";
-                    $pathitem_properties [ "properties" ] = false;
-                    $pathitem_properties [ "filepath" ]  = $this -> filesystem -> getcwd ();
-                }
-
-                $full_path_extended_properties [] = $pathitem_properties;
-
-            }
         }
         else
         {
             $pathitem_properties [ "name" ] = $this -> sense [ "pathitem"];
-            $pathitem_properties [ "type" ] = "root";
+            $pathitem_properties [ "type" ] = "base";
             $pathitem_properties [ "properties" ] = false;
             $pathitem_properties [ "filepath" ]  = $this -> filesystem -> getcwd ();
             $full_path_extended_properties [] = $pathitem_properties;
         }
 
-        if ( $path_item_application_index === false ) {}
-
-
     }
 
     private function pathalyzer ( $parent, $target_path )
     {
+
         $parent_path = $parent [ "filepath" ];
-        Print ("<br>pathalyzer called<br>");
-        $path_item_properties = array ( "name" => "", "type" => "", "filepath" => "", "properties" => array () );
-        $working_path_items = array ();
-        $working_path_string = "";
         $results = array ();
         if ( is_string ( $target_path ) )
             $working_path_items = explode ( "/", $target_path );
@@ -392,10 +287,8 @@ class route implements interface_route
         {
             $path_item_properties [ "name" ] = $path_item_name;
             $working_path_string .= "/" . $path_item_name;
-            print ("<br>checking: ".$working_path_string."<br>");
             if ( is_dir ( $working_path_string ) )
             {
-                print ("<br>it's a dir<br>");
                 $path_item_properties [ "type" ] = "folder";
                 $path_item_properties [ "filepath" ] = $working_path_string;
                 $path_item_properties [ "properties" ]["owner"] = $parent [ "properties" ]["owner"];
@@ -404,7 +297,6 @@ class route implements interface_route
             {
                 if ( is_file ( $working_path_string.".php" ) )
                 {
-                    print ("<br>it's a php<br>");
                     $path_item_properties [ "type" ] = "controller";
                     $path_item_properties [ "filepath" ] = $working_path_string.".php";
                     $path_item_properties [ "properties" ]["mode"] = "file";
@@ -415,14 +307,12 @@ class route implements interface_route
                     {
                         if ( $controller_exists )
                         {
-                            print ("<br>got controller. it's a parameter<br>");
                             $path_item_properties [ "type" ] = "parameter";
                             $path_item_properties [ "filepath" ] = false;
                             $path_item_properties [ "properties" ] = false;
                         }
                         else
                         {
-                            print ("<br>no folder no controller. it is a fault.<br>");
                             $path_item_properties [ "type" ] = "faulty";
                             $path_item_properties [ "filepath" ] = false;
                             $path_item_properties [ "properties" ] = false;
@@ -440,10 +330,8 @@ class route implements interface_route
 
     private function is_common_application ( $path_item_name )
     {
-        Print ("<br><br><strong>Is Common Application?</strong> [ " . $path_item_name . " ]<br>");
         $filesystem_target = $this -> filesystem -> getcwd () . "/" . $this -> configuration -> filesystem [ "relative_folders" ] [ "common_applications" ] . "/" . $path_item_name;
         $filesystem_target = preg_replace('~/+~', '/', $filesystem_target );
-        Print ("<br>filesystem_target: ".$filesystem_target."<br>");
         if ( is_dir ( $filesystem_target ) && $path_item_name != "/" )
         {
             $result = array
@@ -453,12 +341,10 @@ class route implements interface_route
                         "filepath" => $filesystem_target,
                         "properties" => array ( "mode" => "folder", "owner" => "common" )
             );
-            Print ('<br><span style="color:green;">YES</span><br>');
             return $result;
         }
         else
         {
-            Print ("<br>NO<br>");
             return false;
         }
     }
@@ -466,26 +352,22 @@ class route implements interface_route
     private function is_private_application ( $path_items )
     {
         $last_item = array_pop ( $path_items );
-        Print ( "<br><br><strong>Is Private Application?</strong> [ " . $last_item . " ]<br>");
         $filesystem_target = $this -> filesystem -> getcwd () . "/" . $this -> configuration -> filesystem [ "relative_folders" ] [ "subdomains" ] . "/" . implode ( "/", $path_items ) . "/" . $this -> configuration -> filesystem [ "relative_folders" ] [ "private_applications" ] . "/" . $last_item;
         $filesystem_target = preg_replace('~/+~', '/', $filesystem_target );
         
-        Print ("<br>filesystem_target: ".$filesystem_target."<br>");
         if ( is_dir ( $filesystem_target ) && $last_item != "/" )
         {
             $result = array
             (
-                "namw" => $last_item,
+                "name" => $last_item,
                 "type" => "application",
                 "properties" => array ( "mode" => "folder", "owner" => "private" ),
                 "filepath" => $filesystem_target
             );
-            Print ('<br><span style="color:green;">YES</span><br>');
             return $result;
         }
         else
         {
-            Print ("<br>NO<br>");
             return false;
         }
     }
@@ -494,26 +376,19 @@ class route implements interface_route
     {
         $result = array ();
         $temp = array ();
-        Print ("<br><br>Is subdomain called<br>");
         $filesystem_target = $this -> filesystem -> getcwd () . "/" . $this -> configuration -> filesystem [ "relative_folders" ] [ "subdomains" ] . implode ( "/", $path_items );
         $filesystem_target = preg_replace('~/+~', '/', $filesystem_target );
-        Print ("<br>filesystem_target: ".$filesystem_target."<br>");
 
         if ( is_dir ( $filesystem_target ) )
         {
-            Print ("<br>YES! It is subdomain. Build subdomain result.<br><br>");
             $temp = array();
             foreach ( $path_items as $path_item_index => $path_item_name )
             {
-                var_dump($temp);
 
                 $temp [] = $path_item_name;
 
-
-                Print ("<br>subdomain (" . $path_item_index . ") " . $path_item_name . "<br>");
                 $filesystem_target = $this -> filesystem -> getcwd () . "/" . $this -> configuration -> filesystem [ "relative_folders" ] [ "subdomains" ] . "/" . implode ( "/", $temp );
                 $filesystem_target = preg_replace('~/+~', '/', $filesystem_target );
-                Print ("<br>itt file target: ".$filesystem_target."<br>");
 
                 if ( $path_item_name != "/" )
                 {
@@ -528,7 +403,7 @@ class route implements interface_route
                 {
                     $result [] = array (
                         "name" => "/",
-                        "type" => "root",
+                        "type" => "base",
                         "filepath" => $this -> filesystem -> getcwd (),
                         "properties" => array ( "mode" => "folder", "owner" => "common" ) );
 
@@ -537,17 +412,60 @@ class route implements interface_route
                 //array_pop ( $temp );
             }
 
-            Print ("<br>YES<br>");
-
             return $result;
         }
         else //TODO: Logical subdomain without folder.
-            Print ("<br>NO<br>");
             return false;
 
     }
 
-    function processRoute ()
+    function debug ()
+    {
+        print ("<br>route debug<br><br>");
+        print ( "url: " . $this -> url . "<br>");
+        var_dump(parse_url($this -> url));
+        print ("<br>");
+        var_dump(parse_url($this -> url));
+        print ("<br>");
+        var_dump(parse_url($this -> url, PHP_URL_SCHEME));
+        print ("<br>");
+        var_dump(parse_url($this -> url, PHP_URL_USER));
+        print ("<br>");
+        var_dump(parse_url($this -> url, PHP_URL_PASS));
+        print ("<br>");
+        var_dump(parse_url($this -> url, PHP_URL_HOST));
+        print ("<br>");
+        var_dump(parse_url($this -> url, PHP_URL_PORT));
+        print ("<br>");
+        var_dump(parse_url($this -> url, PHP_URL_PATH));
+        print ("<br>");
+        var_dump(parse_url($this -> url, PHP_URL_QUERY));
+        print ("<br>");
+        var_dump(parse_url($this -> url, PHP_URL_FRAGMENT));
+        print ("<br>");
+        print ( '<br>$route -> sense');
+        ob_start();
+        var_dump ( $this -> sense );
+        $dump = ob_get_contents ();
+        ob_end_clean ();
+        $dump = str_replace ( '["', '<span style="color:red; font-weight: bold;">["', $dump );
+        $dump = str_replace ( '"]', '"]</span>', $dump );
+        echo "<pre> $dump </pre>";
+    }
+
+    function __destruct()
+    {
+        // TODO: Implement __destruct() method.
+    }
+}
+
+
+
+
+
+//Removed
+
+/*    function processRoute ()
     {
         $pathitem_relative_path = "/";
         $full_path_extended_properties = array ();
@@ -603,9 +521,9 @@ class route implements interface_route
 
         $this -> sense ["pathitem"] = $full_path_extended_properties;
 
-    }
+    }*/
 
-    private function isApplication ( $pathitem_relative_path )
+/*    private function isApplication ( $pathitem_relative_path )
     {
         $pathitem_name = end ( explode ( "/", $pathitem_relative_path ) );
         //$pathitem_name = substr ( $pathitem_relative_path, strrpos ( $pathitem_relative_path, '/' ) + 1 );
@@ -669,24 +587,4 @@ class route implements interface_route
                 return false;
             }
         }
-    }
-
-    function debug ()
-    {
-        print ("<hr>");
-        print ( "url: " . $this -> url . "<br>");
-        print ( '<br>$route -> sense');
-        ob_start();
-        var_dump ( $this -> sense );
-        $dump = ob_get_contents ();
-        ob_end_clean ();
-        $dump = str_replace ( '["', '<span style="color:red; font-weight: bold;">["', $dump );
-        $dump = str_replace ( '"]', '"]</span>', $dump );
-        echo "<pre> $dump </pre>";
-    }
-
-    function __destruct()
-    {
-        // TODO: Implement __destruct() method.
-    }
-}
+    }*/

@@ -33,9 +33,9 @@ class dispatcher implements interface_dispatcher
         $this -> controller_class_name = $this -> configuration -> core [ "default_controller" ];
         $this -> controller_class_path = $this -> filesystem -> getcwd () . "/" . $this -> configuration -> filesystem [ "relative_folders" ] [ "controllers" ] . "/" . $this -> controller_class_name . ".php";
 
-        if ( $this -> route -> getRoute () )
+        if ( $this -> route -> get_route () )
         {
-            foreach ( $this -> route -> getRoute () as $pathindex => $pathitem )
+            foreach ( $this -> route -> get_route () as $pathindex => $pathitem )
             {
                 if ( $pathitem [ "type" ] == "controller" && $pathitem [ "properties" ][ "mode" ] == "file" )
                 {
@@ -59,9 +59,9 @@ class dispatcher implements interface_dispatcher
 
     private function delegate ()
     {
-        $classname = $this -> configuration -> core [ "namespace" ] . $this -> controller_class_name;
-        require_once ( $this -> controller_class_path );
-        $this -> controller_instance = new $classname ( $this -> route );
+        //$classname = $this -> configuration -> core [ "namespace" ] . $this -> controller_class_name;
+        //require_once ( $this -> controller_class_path );
+        //$this -> controller_instance = new $classname ( $this -> route );
     }
 
     public function __destruct()
