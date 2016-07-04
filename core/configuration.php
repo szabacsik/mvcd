@@ -15,7 +15,7 @@ class configuration implements ibasic
     public $core = array
     (
         "default_application" => "demo",
-        "default_controller"  => "front",
+        "default_controller"  => "main",
         "namespace"           => 'improwerk\implement\mvcd\\'
     );
 

@@ -19,7 +19,8 @@ class dispatcher implements interface_dispatcher
     private $controller_class_path = "";
     private $controller_instance = false;
 
-    private $application_name = '';
+    private $application_data = '';
+    private $controller_data = '';
     private $application_model = false;
     private $application_view = false;
     private $application_controller = false;
@@ -33,7 +34,35 @@ class dispatcher implements interface_dispatcher
         $this -> controller_class_name = $this -> configuration -> core [ "default_controller" ];
         $this -> controller_class_path = $this -> filesystem -> getcwd () . "/" . $this -> configuration -> filesystem [ "relative_folders" ] [ "controllers" ] . "/" . $this -> controller_class_name . ".php";
 
-        if ( $this -> route -> get_route () )
+        $this -> route -> debug ();
+
+        $this -> route -> set_application ( "Default", "path", "folder", "common" );
+
+        print ("<br><hr><hr><br>");
+
+        $this -> route -> debug ();
+
+/*
+        var_dump ( $this -> route -> get_controller () );
+        print ("<hr>");
+        var_dump ( $this -> route -> get_application () );
+        print ("<hr>");
+        var_dump ( $this -> route -> get_subdomain () );
+
+        if ( is_array ( $this -> route -> get_controller () ) )
+        {
+            $this -> application_data = $this -> route -> get_application ();
+            $this -> controller_data = $this -> route -> get_controller ();
+        }
+        else
+        {
+            if ( is_array ( $this -> route -> get_application () ) )
+            {
+                //$this -> route -> set_controller ();
+            }
+        }*/
+
+/*        if ( $this -> route -> get_route () )
         {
             foreach ( $this -> route -> get_route () as $pathindex => $pathitem )
             {
@@ -51,7 +80,7 @@ class dispatcher implements interface_dispatcher
                         }
                 }
             }
-        }
+        }*/
 
         $this -> delegate ();
 

@@ -43,11 +43,13 @@ class route implements interface_route
     private $REQUEST_TIME;
     private $argv;
     private $argc;
-
     private $REQUEST; //$_GET, $_POST, $_COOKIE
 
     public $sense = array ( "domain" => "", "base" => "", "pathitem" => array (), "variables" => array (), "anchor" => "", "protocol" => "", "port" => "" );
     public $url = "";
+    private $controller_index;
+    private $application_index;
+    private $subdomain_index;
     private $configuration;
     private $filesystem;
 
@@ -137,29 +139,41 @@ class route implements interface_route
     {
         return $this -> sense [ "pathitem" ];
     }
-    
+
+    public function get_controller ()
+    {
+        return $this -> sense [ "pathitem" ][ $this -> controller_index ];
+    }
+
+    public function get_application ()
+    {
+        return $this -> sense [ "pathitem" ][ $this -> application_index ];
+    }
+
+    function get_subdomain ()
+    {
+        return array_slice ( $this -> sense [ "pathitem" ], 1, $this -> subdomain_index );
+    }
+
+
+
+    function set_application ( $name, $filepath, $mode, $owner )
+    {
+        if ( is_array ( $this -> get_application () ) )
+        {
+            $pathitem = array ( "name" => $name, "type" => "folder", "filepath" => $filepath, "properties" => array ( "mode" => $mode, "owner" => $owner ) );
+            $this -> sense [ "pathitem" ] [ $this -> application_index ] = $pathitem;
+
+        }
+        else
+        {
+            array_splice ( $this -> sense [ "pathitem" ], 3, 0, $pathitem );
+        }
+    }
+
     function get_domain ()
     {
         return $this -> sense [ "domain" ];
-    }
-
-    function get_subdomains ()
-    {
-        $result = false;
-        foreach ( $this -> sense [ "pathitem" ] as $pathitem )
-        {
-            if ( $pathitem [ "type" ] ==  "subdomain" )
-            {
-                $result [] = $pathitem;
-            }
-            else
-            {
-                break;
-            }
-        }
-
-        return $result;
-
     }
 
     function get_parameters ()
@@ -203,6 +217,7 @@ class route implements interface_route
                 if ( is_array ( $is_common_application ) || is_array ( $is_private_application ) )
                 {
                     $path_item_application_index = $path_item_index;
+                    $this -> application_index = $path_item_index;
                     if ( is_array ( $is_common_application ) )
                     {
                         $full_path_extended_properties [ $path_item_index ] = $is_common_application;
@@ -215,7 +230,7 @@ class route implements interface_route
                     }
 
                     $sub_path_items = array_slice ( $this -> sense ["pathitem"], $path_item_application_index + 1, count ( $this -> sense ["pathitem"] ) - 2 );
-                    $sub_path_properties = $this -> pathalyzer ( $parent, $sub_path_items );
+                    $sub_path_properties = $this -> pathalyzer ( $parent, $sub_path_items, $path_item_application_index + 1 );
                     $sub_path_item_index = 0;
 
                     foreach ( $sub_path_properties as $sub_path_item_properties )
@@ -231,6 +246,8 @@ class route implements interface_route
                     $is_subdomain = $this -> is_subdomain ( $sub_path_items );
                     if ( is_array ( $is_subdomain ) )
                     {
+                        Print ("<br>subdomain index: ".$path_item_index."<br>");
+                        $this -> subdomain_index = $path_item_index;
 
                         $sub_path_item_index = 0;
                         foreach ( $is_subdomain as $sub_path_item_properties )
@@ -254,24 +271,22 @@ class route implements interface_route
 
                 }
             }
-
-            ksort ( $full_path_extended_properties );
-
-            $this -> sense ["pathitem"] = $full_path_extended_properties;
-
         }
         else
         {
-            $pathitem_properties [ "name" ] = $this -> sense [ "pathitem"];
+            $pathitem_properties [ "name" ] = "/";
             $pathitem_properties [ "type" ] = "base";
-            $pathitem_properties [ "properties" ] = false;
+            $pathitem_properties [ "properties" ] = array ( "mode" => "folder", "owner" => "common" );
             $pathitem_properties [ "filepath" ]  = $this -> filesystem -> getcwd ();
             $full_path_extended_properties [] = $pathitem_properties;
         }
 
+        ksort ( $full_path_extended_properties );
+        $this -> sense ["pathitem"] = $full_path_extended_properties;
+
     }
 
-    private function pathalyzer ( $parent, $target_path )
+    private function pathalyzer ( $parent, $target_path, $offset_index )
     {
 
         $parent_path = $parent [ "filepath" ];
@@ -302,6 +317,7 @@ class route implements interface_route
                     $path_item_properties [ "properties" ]["mode"] = "file";
                     $path_item_properties [ "properties" ]["owner"] = $parent [ "properties" ]["owner"];
                     $controller_exists = true;
+                    $this -> controller_index = $offset_index + $path_item_index;
                 }
                 else
                     {
@@ -451,6 +467,27 @@ class route implements interface_route
         $dump = str_replace ( '["', '<span style="color:red; font-weight: bold;">["', $dump );
         $dump = str_replace ( '"]', '"]</span>', $dump );
         echo "<pre> $dump </pre>";
+
+
+        echo "<br><br>get_controller()<br>";
+        ob_start();
+        var_dump ( $this -> get_controller () );
+        $dump = ob_get_contents ();
+        ob_end_clean ();
+        $dump = str_replace ( '["', '<span style="color:red; font-weight: bold;">["', $dump );
+        $dump = str_replace ( '"]', '"]</span>', $dump );
+        echo "<pre> $dump </pre>";
+
+
+        echo "<br><br>get_application()<br>";
+        ob_start();
+        var_dump ( $this -> get_application () );
+        $dump = ob_get_contents ();
+        ob_end_clean ();
+        $dump = str_replace ( '["', '<span style="color:red; font-weight: bold;">["', $dump );
+        $dump = str_replace ( '"]', '"]</span>', $dump );
+        echo "<pre> $dump </pre>";
+
     }
 
     function __destruct()
