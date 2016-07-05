@@ -145,9 +145,24 @@ class route implements interface_route
         return $this -> sense [ "pathitem" ][ $this -> controller_index ];
     }
 
+    public function get_controller_name ()
+    {
+        return $this -> sense [ "pathitem" ][ $this -> controller_index ]["name"];
+    }
+
+    public function get_controller_filepath ()
+    {
+        return $this -> sense [ "pathitem" ][ $this -> controller_index ]["filepath"];
+    }
+
     public function get_application ()
     {
         return $this -> sense [ "pathitem" ][ $this -> application_index ];
+    }
+
+    public function get_application_filepath ()
+    {
+        return $this -> sense [ "pathitem" ][ $this -> application_index ]["filepath"];
     }
 
     function get_subdomain ()
@@ -155,19 +170,54 @@ class route implements interface_route
         return array_slice ( $this -> sense [ "pathitem" ], 1, $this -> subdomain_index );
     }
 
-
-
-    function set_application ( $name, $filepath, $mode, $owner )
+    public function set_application ( $name, $filepath, $mode = "folder" )
     {
+
+        $pathitem [] = array ( "name" => $name, "type" => "application", "filepath" => $filepath, "properties" => array ( "mode" => $mode, "owner" => "common" ) );
         if ( is_array ( $this -> get_application () ) )
         {
-            $pathitem = array ( "name" => $name, "type" => "folder", "filepath" => $filepath, "properties" => array ( "mode" => $mode, "owner" => $owner ) );
             $this -> sense [ "pathitem" ] [ $this -> application_index ] = $pathitem;
-
         }
         else
         {
-            array_splice ( $this -> sense [ "pathitem" ], 3, 0, $pathitem );
+            $this -> application_index = $this -> subdomain_index + 1;
+            array_splice ( $this -> sense [ "pathitem" ], $this -> application_index, 0, $pathitem );
+        }
+
+        $application = $this -> get_application ();
+
+        $filepath = $application ["filepath"] . "/" . $this -> configuration -> core [ "default_controller" ] . ".php";
+
+        $this -> set_controller ( $this -> configuration -> core [ "default_controller" ], $filepath );
+
+    }
+
+    public function set_controller ( $name, $filepath, $mode = "file" )
+    {
+        $pathitem [] = array ( "name" => $name, "type" => "controller", "filepath" => $filepath, "properties" => array ( "mode" => $mode, "owner" => "common" ) );
+        if ( is_array ( $this -> get_controller () ) )
+        {
+            $this -> sense [ "pathitem" ] [ $this -> controller_index ] = $pathitem;
+        }
+        else
+        {
+            $this -> controller_index = $this -> application_index + 1;
+            array_splice ( $this -> sense [ "pathitem" ], $this -> controller_index, 0, $pathitem );
+        }
+
+        $this -> update ( $this -> controller_index + 1 );
+
+    }
+
+    private function update ( $path_item_index_from )
+    {
+        for ( $index = $path_item_index_from; $index < count ( $this -> sense [ 'pathitem'] ); $index++ )
+        {
+
+            print ("<br>update needed<br>");
+            print ( "updating: " . $this -> sense [ 'pathitem'] [$index] ["name"] . "<br>" );
+            var_dump($this -> sense [ 'pathitem'] [$index]);
+
         }
     }
 
@@ -246,7 +296,6 @@ class route implements interface_route
                     $is_subdomain = $this -> is_subdomain ( $sub_path_items );
                     if ( is_array ( $is_subdomain ) )
                     {
-                        Print ("<br>subdomain index: ".$path_item_index."<br>");
                         $this -> subdomain_index = $path_item_index;
 
                         $sub_path_item_index = 0;
