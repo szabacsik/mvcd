@@ -118,6 +118,7 @@ class route implements interface_route
         $this -> sense [ "domain" ] = explode ( ':', $this -> HTTP_HOST );
         $this -> sense [ "domain" ] = $this -> sense [ "domain" ] [ 0 ];
         $this -> sense [ "base" ] = str_replace ( basename ( $this -> SCRIPT_FILENAME ), '', $this -> SCRIPT_NAME );
+        $this -> sense [ "base" ] = preg_replace('~/+~', '', $this -> sense [ "base" ] );
         $path_abstract = str_replace ( $this -> sense [ "base" ], '', str_replace ( basename ( $this -> SCRIPT_FILENAME ), '', $temp [ 0 ] ) );
         unset ( $temp );
         $path_abstract = preg_replace('~/+~', '/', $path_abstract );
@@ -173,7 +174,7 @@ class route implements interface_route
     public function set_application ( $name, $filepath, $mode = "folder" )
     {
 
-        $pathitem [] = array ( "name" => $name, "type" => "application", "filepath" => $filepath, "properties" => array ( "mode" => $mode, "owner" => "common" ) );
+        $pathitem [] = array ( "name" => $name, "type" => "application", "url" => "set_application needs to set", "filepath" => $filepath, "properties" => array ( "mode" => $mode, "owner" => "common" ) );
         if ( is_array ( $this -> get_application () ) )
         {
             $this -> sense [ "pathitem" ] [ $this -> application_index ] = $pathitem;
@@ -184,17 +185,18 @@ class route implements interface_route
             array_splice ( $this -> sense [ "pathitem" ], $this -> application_index, 0, $pathitem );
         }
 
-        $application = $this -> get_application ();
+        //$application = $this -> get_application ();
+        //$filepath = $application ["filepath"] . "/" . $this -> configuration -> core [ "default_controller" ] . ".php";
+        //$this -> set_controller ( $this -> configuration -> core [ "default_controller" ], $filepath );
 
-        $filepath = $application ["filepath"] . "/" . $this -> configuration -> core [ "default_controller" ] . ".php";
-
-        $this -> set_controller ( $this -> configuration -> core [ "default_controller" ], $filepath );
+        $this -> update ( $this -> application_index );
 
     }
 
     public function set_controller ( $name, $filepath, $mode = "file" )
     {
-        $pathitem [] = array ( "name" => $name, "type" => "controller", "filepath" => $filepath, "properties" => array ( "mode" => $mode, "owner" => "common" ) );
+
+        $pathitem [] = array ( "name" => $name, "type" => "controller", "url" => "set_controller needs to set", "filepath" => $filepath, "properties" => array ( "mode" => $mode, "owner" => "common" ) );
         if ( is_array ( $this -> get_controller () ) )
         {
             $this -> sense [ "pathitem" ] [ $this -> controller_index ] = $pathitem;
@@ -205,28 +207,39 @@ class route implements interface_route
             array_splice ( $this -> sense [ "pathitem" ], $this -> controller_index, 0, $pathitem );
         }
 
-        $this -> update ( $this -> controller_index + 1 );
+        $this -> update ( $this -> controller_index );
 
     }
 
-    private function update ( $path_item_index_from )
+    private function update ( $path_item_index_from = 0 )
     {
+        $controller_index = 0;
         for ( $index = $path_item_index_from; $index < count ( $this -> sense [ 'pathitem'] ); $index++ )
         {
+            if ( $this -> sense [ 'pathitem'] [ $index ] [ "type" ] === "controller" )
+            {
+                $controller_index = $index;
+            }
 
-            print ("<br>update needed<br>");
-            print ( "updating: " . $this -> sense [ 'pathitem'] [$index] ["name"] . "<br>" );
-            var_dump($this -> sense [ 'pathitem'] [$index]);
+            if ( $index > $controller_index && $controller_index > 0 && $this -> sense [ 'pathitem'] [ $index ] [ "type" ] === "faulty" )
+            {
+                $this -> sense [ 'pathitem'] [ $index ] [ "type" ] = "parameter";
+            }
 
         }
     }
 
-    function get_domain ()
+    public function get_domain ()
     {
         return $this -> sense [ "domain" ];
     }
 
-    function get_parameters ()
+    public function get_base ()
+    {
+        return $this -> sense [ "base" ];
+    }
+
+    public function get_parameters ()
     {
         $result = false;
         foreach ( $this -> sense [ "pathitem" ] as $pathitem )
@@ -245,13 +258,14 @@ class route implements interface_route
 
     }
 
-    function get_port()
+    public function get_port()
     {
         return $this -> sense [ "port" ];
     }
 
     private function reverse_process ()
     {
+        $pathitem_url = $this -> get_domain() . "/" .  $this -> get_base();
 
         if ( count ( $this -> sense [ "pathitem"] ) > 1 && $this -> sense [ "pathitem"] != "/" )
         {
@@ -270,11 +284,15 @@ class route implements interface_route
                     $this -> application_index = $path_item_index;
                     if ( is_array ( $is_common_application ) )
                     {
+                        $pathitem_url .= "/" . $path_item_name;
+
+                        $is_common_application [ "url" ] = $pathitem_url;
                         $full_path_extended_properties [ $path_item_index ] = $is_common_application;
                         $parent = $is_common_application;
                     }
                     else
                     {
+                        $is_private_application [ "url" ] = $pathitem_url;
                         $full_path_extended_properties [ $path_item_index ] = $is_private_application;
                         $parent = $is_private_application;
                     }
@@ -286,6 +304,7 @@ class route implements interface_route
                     foreach ( $sub_path_properties as $sub_path_item_properties )
                     {
                         $sub_path_item_index++;
+                        //$sub_path_item_properties [ "url" ] = "sub path url needs to set";
                         $full_path_extended_properties [ $path_item_index + $sub_path_item_index ] = $sub_path_item_properties;
                     }
 
@@ -297,10 +316,11 @@ class route implements interface_route
                     if ( is_array ( $is_subdomain ) )
                     {
                         $this -> subdomain_index = $path_item_index;
-
                         $sub_path_item_index = 0;
                         foreach ( $is_subdomain as $sub_path_item_properties )
                         {
+                            //$sub_path_item_properties ["url"] = "subdomain url needs to set";
+                            $sub_path_item_properties ["url"] = $pathitem_url . $sub_path_item_properties ["url"] . "/";
                             $full_path_extended_properties [ $sub_path_item_index ] = $sub_path_item_properties;
                             $sub_path_item_index++;
                         }
@@ -310,11 +330,22 @@ class route implements interface_route
                     }
                     else
                     {
-                        $path_item_properties = array ( "name" => $path_item_name,
-                                                        "type" => "faulty",
-                                                        "mode" => false,
-                                                        "filepath" => false,
-                                                        "properties" => false );
+                        if ( $path_item_name === "/" )
+                        {
+                            $path_item_properties = array ( "name" => $path_item_name,
+                                "type" => "base",
+                                "url" => $this -> get_domain() . "/" .  $this -> get_base(),
+                                "filepath" => $this -> filesystem -> getcwd (),
+                                "properties" => array ( "mode" => "folder", "owner" => "common" ) );
+                        }
+                        else
+                        {
+                            $path_item_properties = array ( "name" => $path_item_name,
+                                "type" => "faulty",
+                                "url" => false,
+                                "filepath" => false,
+                                "properties" => false );
+                        }
                         $full_path_extended_properties [ $path_item_index ] = $path_item_properties;
                     }
 
@@ -325,6 +356,7 @@ class route implements interface_route
         {
             $pathitem_properties [ "name" ] = "/";
             $pathitem_properties [ "type" ] = "base";
+            $pathitem_properties [ "url" ] = $pathitem_url;
             $pathitem_properties [ "properties" ] = array ( "mode" => "folder", "owner" => "common" );
             $pathitem_properties [ "filepath" ]  = $this -> filesystem -> getcwd ();
             $full_path_extended_properties [] = $pathitem_properties;
@@ -354,6 +386,7 @@ class route implements interface_route
             if ( is_dir ( $working_path_string ) )
             {
                 $path_item_properties [ "type" ] = "folder";
+                $path_item_properties [ "url" ] = "lehetoseg 1";
                 $path_item_properties [ "filepath" ] = $working_path_string;
                 $path_item_properties [ "properties" ]["owner"] = $parent [ "properties" ]["owner"];
             }
@@ -362,6 +395,7 @@ class route implements interface_route
                 if ( is_file ( $working_path_string.".php" ) )
                 {
                     $path_item_properties [ "type" ] = "controller";
+                    $path_item_properties [ "url" ] = "lehetoseg 2";
                     $path_item_properties [ "filepath" ] = $working_path_string.".php";
                     $path_item_properties [ "properties" ]["mode"] = "file";
                     $path_item_properties [ "properties" ]["owner"] = $parent [ "properties" ]["owner"];
@@ -373,12 +407,14 @@ class route implements interface_route
                         if ( $controller_exists )
                         {
                             $path_item_properties [ "type" ] = "parameter";
+                            $path_item_properties [ "url" ] = "lehetoseg 3";
                             $path_item_properties [ "filepath" ] = false;
                             $path_item_properties [ "properties" ] = false;
                         }
                         else
                         {
                             $path_item_properties [ "type" ] = "faulty";
+                            $path_item_properties [ "url" ] = "lehetoseg 4";
                             $path_item_properties [ "filepath" ] = false;
                             $path_item_properties [ "properties" ] = false;
                         }
@@ -439,12 +475,12 @@ class route implements interface_route
 
     private function is_subdomain ( $path_items )
     {
-        $result = array ();
+        $result = false;
         $temp = array ();
         $filesystem_target = $this -> filesystem -> getcwd () . "/" . $this -> configuration -> filesystem [ "relative_folders" ] [ "subdomains" ] . implode ( "/", $path_items );
         $filesystem_target = preg_replace('~/+~', '/', $filesystem_target );
 
-        if ( is_dir ( $filesystem_target ) )
+        if ( is_dir ( $filesystem_target ) && $filesystem_target !== $this -> filesystem -> getcwd () . "/" . $this -> configuration -> filesystem [ "relative_folders" ] [ "subdomains" ] . "/" )
         {
             $temp = array();
             foreach ( $path_items as $path_item_index => $path_item_name )
@@ -455,23 +491,26 @@ class route implements interface_route
                 $filesystem_target = $this -> filesystem -> getcwd () . "/" . $this -> configuration -> filesystem [ "relative_folders" ] [ "subdomains" ] . "/" . implode ( "/", $temp );
                 $filesystem_target = preg_replace('~/+~', '/', $filesystem_target );
 
+                $url = implode ( "/", $temp );
+                $url = preg_replace('~/+~', '/', $url );
+
                 if ( $path_item_name != "/" )
                 {
                     $result [] = array (
                         "name" => $path_item_name,
                         "type" => "subdomain",
+                        "url" => $url,
                         "filepath" => $filesystem_target,
                         "properties" => array ( "mode" => "folder", "owner" => "private" ) );
-
                 }
                 else
                 {
                     $result [] = array (
                         "name" => "/",
                         "type" => "base",
+                        "url" => "",
                         "filepath" => $this -> filesystem -> getcwd (),
                         "properties" => array ( "mode" => "folder", "owner" => "common" ) );
-
                 }
 
                 //array_pop ( $temp );
@@ -480,13 +519,19 @@ class route implements interface_route
             return $result;
         }
         else //TODO: Logical subdomain without folder.
+        {
+            if ( $filesystem_target === $this -> filesystem -> getcwd () . "/" . $this -> configuration -> filesystem [ "relative_folders" ] [ "subdomains" ] . "/" )
+            {
+                //TODO: is subdomain? /.../.../.../.../mvcd/subdomains/ no
+            }
             return false;
+        }
 
     }
 
-    function debug ()
+    public function debug ()
     {
-        print ("<br>route debug<br><br>");
+        print ("<br><h1>route debug</h1>");
         print ( "url: " . $this -> url . "<br>");
         var_dump(parse_url($this -> url));
         print ("<br>");

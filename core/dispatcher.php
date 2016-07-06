@@ -23,13 +23,15 @@ class dispatcher implements interface_dispatcher
         $this -> filesystem = $filesystem;
         $this -> route = $route;
 
+        $this -> route -> debug ();
+
         if ( !$this -> route -> get_application () )
             $this -> route -> set_application ( $this -> configuration -> core [ "default_application" ], $this -> filesystem -> getcwd () . "/" . $this -> configuration -> filesystem [ "relative_folders" ] [ "common_applications" ] . "/" . $this -> configuration -> core [ "default_application" ] );
 
         if ( !$this -> route -> get_controller () )
                 $this -> route -> set_controller ( $this -> configuration -> core [ "default_controller" ], $this -> route -> get_application_filepath () . "/" . $this -> configuration -> core [ "default_controller" ] . ".php" );
 
-        $this -> delegate ();
+        //$this -> delegate ();
 
     }
 

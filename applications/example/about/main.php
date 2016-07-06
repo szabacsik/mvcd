@@ -9,16 +9,17 @@
 namespace improwerk\implement\mvcd;
 
 
-class main implements iadvanced
+class main implements interface_controller
 {
 
-    public function __construct($object)
+    public function __construct ( $route )
     {
-        echo ("<br><br><hr><br><strong>Hello World! This is the demo application.</strong><br><br><hr><br><br>");
+        echo ("About");
     }
 
     public function __destruct()
     {
         // TODO: Implement __destruct() method.
     }
+
 }

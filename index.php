@@ -1,5 +1,5 @@
 <?php
-$startScriptTime=microtime(TRUE);
+$startScriptTime = microtime ( TRUE );
 /**
  * Created by PhpStorm.
  * User: szabacsik
@@ -23,6 +23,6 @@ $dispatcher = new mvcd\dispatcher ( $configuration, $filesystem, $route );
 
 //$filesystem -> debug ();
 //$route -> debug ();
-$endScriptTime=microtime(TRUE);
-$totalScriptTime=$endScriptTime-$startScriptTime;
-echo '<br><br><hr>Load time: '.number_format($totalScriptTime, 4).' seconds<hr>';
+$endScriptTime = microtime ( TRUE );
+$totalScriptTime = $endScriptTime - $startScriptTime;
+echo '<br><hr>Load time: ' . number_format ( $totalScriptTime, 4 ) . ' seconds <hr>';
