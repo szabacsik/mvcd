@@ -21,9 +21,14 @@ class filesystem implements ibasic
         $this -> working_directory = rtrim ( str_replace ( $executed_file_name, "", $_SERVER [ 'SCRIPT_FILENAME' ] ), "/" );
     }
 
-    public function getcwd ()
+    public function get_root ()
     {
         return $this -> working_directory;
+    }
+
+    public function get_home ()
+    {
+
     }
 
     public function debug ()

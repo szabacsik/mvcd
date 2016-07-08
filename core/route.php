@@ -45,7 +45,7 @@ class route implements interface_route
     private $argc;
     private $REQUEST; //$_GET, $_POST, $_COOKIE
 
-    public $sense = array ( "domain" => "", "base" => "", "pathitem" => array (), "variables" => array (), "anchor" => "", "protocol" => "", "port" => "" );
+    public $sense = array("domain" => "", "base" => "", "pathitem" => array(), "variables" => array(), "anchor" => "", "protocol" => "", "port" => "");
     public $url = "";
     private $controller_index;
     private $application_index;
@@ -53,204 +53,193 @@ class route implements interface_route
     private $configuration;
     private $filesystem;
 
-    function __construct ( $configuration, $filesystem )
+    public $point_list;
+
+    function __construct($configuration, $filesystem)
     {
-        $this -> configuration = $configuration;
-        $this -> filesystem = $filesystem;
-        $this -> init_static ();
-        $this -> init_dynamic ();
-        $this -> reverse_process ();
+        $this->configuration = $configuration;
+        $this->filesystem = $filesystem;
+        $this->init_static();
+        $this->init_dynamic();
+        $this->reverse_process();
+        //$this -> process ();
     }
 
-    private function init_static ()
+    private function init_static()
     {
-        $this -> HTTP_HOST                      = $_SERVER [ 'HTTP_HOST' ];
-        $this -> SERVER_NAME                    = $_SERVER [ 'SERVER_NAME' ];
-        $this -> REQUEST_URI                    = $_SERVER [ 'REQUEST_URI' ];
-        $this -> SCRIPT_NAME                    = $_SERVER [ 'SCRIPT_NAME' ];
-        $this -> SCRIPT_FILENAME                = $_SERVER [ 'SCRIPT_FILENAME' ];
-        $this -> DOCUMENT_ROOT                  = $_SERVER [ 'DOCUMENT_ROOT' ];
-        $this -> GATEWAY_INTERFACE              = $_SERVER [ 'GATEWAY_INTERFACE' ];
-        $this -> HTTP_ACCEPT                    = $_SERVER [ 'HTTP_ACCEPT' ];
-        $this -> HTTP_ACCEPT_ENCODING           = $_SERVER [ 'HTTP_ACCEPT_ENCODING' ];
-        $this -> HTTP_ACCEPT_LANGUAGE           = $_SERVER [ 'HTTP_ACCEPT_LANGUAGE' ];
-        $this -> HTTP_CACHE_CONTROL             = $_SERVER [ 'HTTP_CACHE_CONTROL' ];
-        $this -> HTTP_CONNECTION                = $_SERVER [ 'HTTP_CONNECTION' ];
-        $this -> HTTP_DNT                       = $_SERVER [ 'HTTP_DNT' ];
-        $this -> HTTP_HOST                      = $_SERVER [ 'HTTP_HOST' ];
-        $this -> HTTP_UPGRADE_INSECURE_REQUESTS = $_SERVER [ 'HTTP_UPGRADE_INSECURE_REQUESTS' ];
-        $this -> HTTP_USER_AGENT                = $_SERVER [ 'HTTP_USER_AGENT' ];
-        $this -> PATH                           = $_SERVER [ 'PATH' ];
-        $this -> QUERY_STRING                   = $_SERVER [ 'QUERY_STRING' ];
-        $this -> REDIRECT_STATUS                = $_SERVER [ 'REDIRECT_STATUS' ];
-        $this -> REMOTE_ADDR                    = $_SERVER [ 'REMOTE_ADDR' ];
-        $this -> REMOTE_PORT                    = $_SERVER [ 'REMOTE_PORT' ];
-        $this -> REQUEST_METHOD                 = $_SERVER [ 'REQUEST_METHOD' ];
-        $this -> REQUEST_URI                    = $_SERVER [ 'REQUEST_URI' ];
-        $this -> SCRIPT_FILENAME                = $_SERVER [ 'SCRIPT_FILENAME' ];
-        $this -> SCRIPT_NAME                    = $_SERVER [ 'SCRIPT_NAME' ];
-        $this -> SERVER_ADDR                    = $_SERVER [ 'SERVER_ADDR' ];
-        $this -> SERVER_ADMIN                   = $_SERVER [ 'SERVER_ADMIN' ];
-        $this -> SERVER_NAME                    = $_SERVER [ 'SERVER_NAME' ];
-        $this -> SERVER_PORT                    = $_SERVER [ 'SERVER_PORT' ];
-        $this -> SERVER_PROTOCOL                = $_SERVER [ 'SERVER_PROTOCOL' ];
-        $this -> SERVER_SIGNATURE               = $_SERVER [ 'SERVER_SIGNATURE' ];
-        $this -> SERVER_SOFTWARE                = $_SERVER [ 'SERVER_SOFTWARE' ];
-        $this -> PHP_SELF                       = $_SERVER [ 'PHP_SELF' ];
-        $this -> REQUEST_TIME                   = $_SERVER [ 'REQUEST_TIME' ];
-        $this -> argv                           = $_SERVER [ 'argv' ];
-        $this -> argc                           = $_SERVER [ 'argc' ];
-        $this -> REQUEST                        = $_REQUEST;
+        $this->HTTP_HOST = $_SERVER ['HTTP_HOST'];
+        $this->SERVER_NAME = $_SERVER ['SERVER_NAME'];
+        $this->REQUEST_URI = $_SERVER ['REQUEST_URI'];
+        $this->SCRIPT_NAME = $_SERVER ['SCRIPT_NAME'];
+        $this->SCRIPT_FILENAME = $_SERVER ['SCRIPT_FILENAME'];
+        $this->DOCUMENT_ROOT = $_SERVER ['DOCUMENT_ROOT'];
+        $this->GATEWAY_INTERFACE = $_SERVER ['GATEWAY_INTERFACE'];
+        $this->HTTP_ACCEPT = $_SERVER ['HTTP_ACCEPT'];
+        $this->HTTP_ACCEPT_ENCODING = $_SERVER ['HTTP_ACCEPT_ENCODING'];
+        $this->HTTP_ACCEPT_LANGUAGE = $_SERVER ['HTTP_ACCEPT_LANGUAGE'];
+        $this->HTTP_CACHE_CONTROL = $_SERVER ['HTTP_CACHE_CONTROL'];
+        $this->HTTP_CONNECTION = $_SERVER ['HTTP_CONNECTION'];
+        $this->HTTP_DNT = $_SERVER ['HTTP_DNT'];
+        $this->HTTP_HOST = $_SERVER ['HTTP_HOST'];
+        $this->HTTP_UPGRADE_INSECURE_REQUESTS = $_SERVER ['HTTP_UPGRADE_INSECURE_REQUESTS'];
+        $this->HTTP_USER_AGENT = $_SERVER ['HTTP_USER_AGENT'];
+        $this->PATH = $_SERVER ['PATH'];
+        $this->QUERY_STRING = $_SERVER ['QUERY_STRING'];
+        $this->REDIRECT_STATUS = $_SERVER ['REDIRECT_STATUS'];
+        $this->REMOTE_ADDR = $_SERVER ['REMOTE_ADDR'];
+        $this->REMOTE_PORT = $_SERVER ['REMOTE_PORT'];
+        $this->REQUEST_METHOD = $_SERVER ['REQUEST_METHOD'];
+        $this->REQUEST_URI = $_SERVER ['REQUEST_URI'];
+        $this->SCRIPT_FILENAME = $_SERVER ['SCRIPT_FILENAME'];
+        $this->SCRIPT_NAME = $_SERVER ['SCRIPT_NAME'];
+        $this->SERVER_ADDR = $_SERVER ['SERVER_ADDR'];
+        $this->SERVER_ADMIN = $_SERVER ['SERVER_ADMIN'];
+        $this->SERVER_NAME = $_SERVER ['SERVER_NAME'];
+        $this->SERVER_PORT = $_SERVER ['SERVER_PORT'];
+        $this->SERVER_PROTOCOL = $_SERVER ['SERVER_PROTOCOL'];
+        $this->SERVER_SIGNATURE = $_SERVER ['SERVER_SIGNATURE'];
+        $this->SERVER_SOFTWARE = $_SERVER ['SERVER_SOFTWARE'];
+        $this->PHP_SELF = $_SERVER ['PHP_SELF'];
+        $this->REQUEST_TIME = $_SERVER ['REQUEST_TIME'];
+        $this->argv = $_SERVER ['argv'];
+        $this->argc = $_SERVER ['argc'];
+        $this->REQUEST = $_REQUEST;
 
-        $this -> sense [ "variables" ]   = $this -> REQUEST;
-        $this -> sense [ "port" ]        = $this -> SERVER_PORT;
-        $this -> sense [ "protocol" ]    = $this -> SERVER_PROTOCOL;
+        $this->sense ["variables"] = $this->REQUEST;
+        $this->sense ["port"] = $this->SERVER_PORT;
+        $this->sense ["protocol"] = $this->SERVER_PROTOCOL;
     }
 
-    private function init_dynamic ()
+    private function init_dynamic()
     {
 
-        $this -> url = $this -> HTTP_HOST . $this -> REQUEST_URI;
-        if ( strpos ( $this -> REQUEST_URI, "?" ) === false )
-            $temp [ 0 ] = $this -> REQUEST_URI;
+        $this->url = $this->HTTP_HOST . $this->REQUEST_URI;
+        if (strpos($this->REQUEST_URI, "?") === false)
+            $temp [0] = $this->REQUEST_URI;
         else
-            $temp = explode ( "?", $this -> REQUEST_URI );
-        $this -> sense [ "domain" ] = explode ( ':', $this -> HTTP_HOST );
-        $this -> sense [ "domain" ] = $this -> sense [ "domain" ] [ 0 ];
-        $this -> sense [ "base" ] = str_replace ( basename ( $this -> SCRIPT_FILENAME ), '', $this -> SCRIPT_NAME );
-        $this -> sense [ "base" ] = preg_replace('~/+~', '', $this -> sense [ "base" ] );
-        $path_abstract = str_replace ( $this -> sense [ "base" ], '', str_replace ( basename ( $this -> SCRIPT_FILENAME ), '', $temp [ 0 ] ) );
-        unset ( $temp );
-        $path_abstract = preg_replace('~/+~', '/', $path_abstract );
-        $path_abstract = ltrim ( $path_abstract, '/' );
-        $path_abstract = rtrim ( $path_abstract, '/' );
-        if ( $path_abstract === "/" || $path_abstract === "" )
-        {
-            $this -> sense [ "pathitem" ] = array ( 0 => "/" );
-        }
-        else
-        {
-            $this -> sense [ "pathitem" ] = explode( "/", $path_abstract );
-            array_unshift ( $this -> sense [ "pathitem" ], "/" );
+            $temp = explode("?", $this->REQUEST_URI);
+        $this->sense ["domain"] = explode(':', $this->HTTP_HOST);
+        $this->sense ["domain"] = $this->sense ["domain"] [0];
+        $this->sense ["base"] = str_replace(basename($this->SCRIPT_FILENAME), '', $this->SCRIPT_NAME);
+        $this->sense ["base"] = preg_replace('~/+~', '', $this->sense ["base"]);
+        $path_abstract = str_replace($this->sense ["base"], '', str_replace(basename($this->SCRIPT_FILENAME), '', $temp [0]));
+        unset ($temp);
+        $path_abstract = preg_replace('~/+~', '/', $path_abstract);
+        $path_abstract = ltrim($path_abstract, '/');
+        $path_abstract = rtrim($path_abstract, '/');
+        if ($path_abstract === "/" || $path_abstract === "") {
+            $this->sense ["pathitem"] = array(0 => "/");
+        } else {
+            $this->sense ["pathitem"] = explode("/", $path_abstract);
+            array_unshift($this->sense ["pathitem"], "/");
         }
 
+        $this->point_list = $this->sense ["pathitem"];
+
     }
 
-    function get_route ()
+    function get_route()
     {
-        return $this -> sense [ "pathitem" ];
+        return $this->sense ["pathitem"];
     }
 
-    public function get_controller ()
+    public function get_controller()
     {
-        return $this -> sense [ "pathitem" ][ $this -> controller_index ];
+        return $this->sense ["pathitem"][$this->controller_index];
     }
 
-    public function get_controller_name ()
+    public function get_controller_name()
     {
-        return $this -> sense [ "pathitem" ][ $this -> controller_index ]["name"];
+        return $this->sense ["pathitem"][$this->controller_index]["name"];
     }
 
-    public function get_controller_filepath ()
+    public function get_controller_filepath()
     {
-        return $this -> sense [ "pathitem" ][ $this -> controller_index ]["filepath"];
+        return $this->sense ["pathitem"][$this->controller_index]["filepath"];
     }
 
-    public function get_application ()
+    public function get_application()
     {
-        return $this -> sense [ "pathitem" ][ $this -> application_index ];
+        return $this->sense ["pathitem"][$this->application_index];
     }
 
-    public function get_application_filepath ()
+    public function get_application_filepath()
     {
-        return $this -> sense [ "pathitem" ][ $this -> application_index ]["filepath"];
+        return $this->sense ["pathitem"][$this->application_index]["filepath"];
     }
 
-    function get_subdomain ()
+    function get_subdomain()
     {
-        return array_slice ( $this -> sense [ "pathitem" ], 1, $this -> subdomain_index );
+        return array_slice($this->sense ["pathitem"], 1, $this->subdomain_index);
     }
 
-    public function set_application ( $name, $filepath, $mode = "folder" )
+    public function set_application($name, $filepath, $mode = "folder")
     {
 
-        $pathitem [] = array ( "name" => $name, "type" => "application", "url" => "set_application needs to set", "filepath" => $filepath, "properties" => array ( "mode" => $mode, "owner" => "common" ) );
-        if ( is_array ( $this -> get_application () ) )
-        {
-            $this -> sense [ "pathitem" ] [ $this -> application_index ] = $pathitem;
-        }
-        else
-        {
-            $this -> application_index = $this -> subdomain_index + 1;
-            array_splice ( $this -> sense [ "pathitem" ], $this -> application_index, 0, $pathitem );
+        $pathitem [] = array("name" => $name, "type" => "application", "url" => "set_application needs to set", "filepath" => $filepath, "properties" => array("mode" => $mode, "owner" => "common"));
+        if (is_array($this->get_application())) {
+            $this->sense ["pathitem"] [$this->application_index] = $pathitem;
+        } else {
+            $this->application_index = $this->subdomain_index + 1;
+            array_splice($this->sense ["pathitem"], $this->application_index, 0, $pathitem);
         }
 
         //$application = $this -> get_application ();
         //$filepath = $application ["filepath"] . "/" . $this -> configuration -> core [ "default_controller" ] . ".php";
         //$this -> set_controller ( $this -> configuration -> core [ "default_controller" ], $filepath );
 
-        $this -> update ( $this -> application_index );
+        $this->update($this->application_index);
 
     }
 
-    public function set_controller ( $name, $filepath, $mode = "file" )
+    public function set_controller($name, $filepath, $mode = "file")
     {
 
-        $pathitem [] = array ( "name" => $name, "type" => "controller", "url" => "set_controller needs to set", "filepath" => $filepath, "properties" => array ( "mode" => $mode, "owner" => "common" ) );
-        if ( is_array ( $this -> get_controller () ) )
-        {
-            $this -> sense [ "pathitem" ] [ $this -> controller_index ] = $pathitem;
-        }
-        else
-        {
-            $this -> controller_index = $this -> application_index + 1;
-            array_splice ( $this -> sense [ "pathitem" ], $this -> controller_index, 0, $pathitem );
+        $pathitem [] = array("name" => $name, "type" => "controller", "url" => "set_controller needs to set", "filepath" => $filepath, "properties" => array("mode" => $mode, "owner" => "common"));
+        if (is_array($this->get_controller())) {
+            $this->sense ["pathitem"] [$this->controller_index] = $pathitem;
+        } else {
+            $this->controller_index = $this->application_index + 1;
+            array_splice($this->sense ["pathitem"], $this->controller_index, 0, $pathitem);
         }
 
-        $this -> update ( $this -> controller_index );
+        $this->update($this->controller_index);
 
     }
 
-    private function update ( $path_item_index_from = 0 )
+    private function update($path_item_index_from = 0)
     {
         $controller_index = 0;
-        for ( $index = $path_item_index_from; $index < count ( $this -> sense [ 'pathitem'] ); $index++ )
-        {
-            if ( $this -> sense [ 'pathitem'] [ $index ] [ "type" ] === "controller" )
-            {
+        for ($index = $path_item_index_from; $index < count($this->sense ['pathitem']); $index++) {
+            if ($this->sense ['pathitem'] [$index] ["type"] === "controller") {
                 $controller_index = $index;
             }
 
-            if ( $index > $controller_index && $controller_index > 0 && $this -> sense [ 'pathitem'] [ $index ] [ "type" ] === "faulty" )
-            {
-                $this -> sense [ 'pathitem'] [ $index ] [ "type" ] = "parameter";
+            if ($index > $controller_index && $controller_index > 0 && $this->sense ['pathitem'] [$index] ["type"] === "faulty") {
+                $this->sense ['pathitem'] [$index] ["type"] = "parameter";
             }
 
         }
     }
 
-    public function get_domain ()
+    public function get_domain()
     {
-        return $this -> sense [ "domain" ];
+        return $this->sense ["domain"];
     }
 
-    public function get_base ()
+    public function get_base()
     {
-        return $this -> sense [ "base" ];
+        return $this->sense ["base"];
     }
 
-    public function get_parameters ()
+    public function get_parameters()
     {
         $result = false;
-        foreach ( $this -> sense [ "pathitem" ] as $pathitem )
-        {
-            if ( $pathitem [ "type" ] ==  "parameter" )
-            {
+        foreach ($this->sense ["pathitem"] as $pathitem) {
+            if ($pathitem ["type"] == "parameter") {
                 $result [] = $pathitem;
-            }
-            else
-            {
-               // break;
+            } else {
+                // break;
             }
         }
 
@@ -260,165 +249,137 @@ class route implements interface_route
 
     public function get_port()
     {
-        return $this -> sense [ "port" ];
+        return $this->sense ["port"];
     }
 
-    private function reverse_process ()
+    private function reverse_process()
     {
-        $pathitem_url = $this -> get_domain() . "/" .  $this -> get_base();
+        $pathitem_url = $this->get_domain() . "/" . $this->get_base();
 
-        if ( count ( $this -> sense [ "pathitem"] ) > 1 && $this -> sense [ "pathitem"] != "/" )
-        {
+        if (count($this->sense ["pathitem"]) > 1 && $this->sense ["pathitem"] != "/") {
 
-            $full_path_extended_properties = array ();
+            $full_path_extended_properties = array();
 
-            foreach ( array_reverse ( $this -> sense [ "pathitem" ], true ) as $path_item_index => $path_item_name )
-            {
-                $is_common_application = $this -> is_common_application ( $path_item_name );
-                $sub_path_items = array_slice ( $this -> sense ["pathitem"], 0, $path_item_index + 1 );
-                $is_private_application = $this -> is_private_application ( $sub_path_items );
+            foreach (array_reverse($this->sense ["pathitem"], true) as $path_item_index => $path_item_name) {
+                $is_common_application = $this->is_common_application($path_item_name);
+                $sub_path_items = array_slice($this->sense ["pathitem"], 0, $path_item_index + 1);
+                $is_private_application = $this->is_private_application($sub_path_items);
 
-                if ( is_array ( $is_common_application ) || is_array ( $is_private_application ) )
-                {
+                if (is_array($is_common_application) || is_array($is_private_application)) {
                     $path_item_application_index = $path_item_index;
-                    $this -> application_index = $path_item_index;
-                    if ( is_array ( $is_common_application ) )
-                    {
+                    $this->application_index = $path_item_index;
+                    if (is_array($is_common_application)) {
                         $pathitem_url .= "/" . $path_item_name;
 
-                        $is_common_application [ "url" ] = $pathitem_url;
-                        $full_path_extended_properties [ $path_item_index ] = $is_common_application;
+                        $is_common_application ["url"] = $pathitem_url;
+                        $full_path_extended_properties [$path_item_index] = $is_common_application;
                         $parent = $is_common_application;
-                    }
-                    else
-                    {
-                        $is_private_application [ "url" ] = $pathitem_url;
-                        $full_path_extended_properties [ $path_item_index ] = $is_private_application;
+                    } else {
+                        $is_private_application ["url"] = $pathitem_url;
+                        $full_path_extended_properties [$path_item_index] = $is_private_application;
                         $parent = $is_private_application;
                     }
 
-                    $sub_path_items = array_slice ( $this -> sense ["pathitem"], $path_item_application_index + 1, count ( $this -> sense ["pathitem"] ) - 2 );
-                    $sub_path_properties = $this -> pathalyzer ( $parent, $sub_path_items, $path_item_application_index + 1 );
+                    $sub_path_items = array_slice($this->sense ["pathitem"], $path_item_application_index + 1, count($this->sense ["pathitem"]) - 2);
+                    $sub_path_properties = $this->pathalyzer($parent, $sub_path_items, $path_item_application_index + 1);
                     $sub_path_item_index = 0;
 
-                    foreach ( $sub_path_properties as $sub_path_item_properties )
-                    {
+                    foreach ($sub_path_properties as $sub_path_item_properties) {
                         $sub_path_item_index++;
                         //$sub_path_item_properties [ "url" ] = "sub path url needs to set";
-                        $full_path_extended_properties [ $path_item_index + $sub_path_item_index ] = $sub_path_item_properties;
+                        $full_path_extended_properties [$path_item_index + $sub_path_item_index] = $sub_path_item_properties;
                     }
 
-                }
-                else
-                {
-                    $sub_path_items = array_slice ( $this -> sense ["pathitem"], 0, $path_item_index + 1 );
-                    $is_subdomain = $this -> is_subdomain ( $sub_path_items );
-                    if ( is_array ( $is_subdomain ) )
-                    {
-                        $this -> subdomain_index = $path_item_index;
+                } else {
+                    $sub_path_items = array_slice($this->sense ["pathitem"], 0, $path_item_index + 1);
+                    $is_subdomain = $this->is_subdomain($sub_path_items);
+                    if (is_array($is_subdomain)) {
+                        $this->subdomain_index = $path_item_index;
                         $sub_path_item_index = 0;
-                        foreach ( $is_subdomain as $sub_path_item_properties )
-                        {
+                        foreach ($is_subdomain as $sub_path_item_properties) {
                             //$sub_path_item_properties ["url"] = "subdomain url needs to set";
                             $sub_path_item_properties ["url"] = $pathitem_url . $sub_path_item_properties ["url"] . "/";
-                            $full_path_extended_properties [ $sub_path_item_index ] = $sub_path_item_properties;
+                            $full_path_extended_properties [$sub_path_item_index] = $sub_path_item_properties;
                             $sub_path_item_index++;
                         }
 
                         break;
 
-                    }
-                    else
-                    {
-                        if ( $path_item_name === "/" )
-                        {
-                            $path_item_properties = array ( "name" => $path_item_name,
+                    } else {
+                        if ($path_item_name === "/") {
+                            $path_item_properties = array("name" => $path_item_name,
                                 "type" => "base",
-                                "url" => $this -> get_domain() . "/" .  $this -> get_base(),
-                                "filepath" => $this -> filesystem -> getcwd (),
-                                "properties" => array ( "mode" => "folder", "owner" => "common" ) );
-                        }
-                        else
-                        {
-                            $path_item_properties = array ( "name" => $path_item_name,
+                                "url" => $this->get_domain() . "/" . $this->get_base(),
+                                "filepath" => $this->filesystem->get_root(),
+                                "properties" => array("mode" => "folder", "owner" => "common"));
+                        } else {
+                            $path_item_properties = array("name" => $path_item_name,
                                 "type" => "faulty",
                                 "url" => false,
                                 "filepath" => false,
-                                "properties" => false );
+                                "properties" => false);
                         }
-                        $full_path_extended_properties [ $path_item_index ] = $path_item_properties;
+                        $full_path_extended_properties [$path_item_index] = $path_item_properties;
                     }
 
                 }
             }
-        }
-        else
-        {
-            $pathitem_properties [ "name" ] = "/";
-            $pathitem_properties [ "type" ] = "base";
-            $pathitem_properties [ "url" ] = $pathitem_url;
-            $pathitem_properties [ "properties" ] = array ( "mode" => "folder", "owner" => "common" );
-            $pathitem_properties [ "filepath" ]  = $this -> filesystem -> getcwd ();
+        } else {
+            $pathitem_properties ["name"] = "/";
+            $pathitem_properties ["type"] = "base";
+            $pathitem_properties ["url"] = $pathitem_url;
+            $pathitem_properties ["properties"] = array("mode" => "folder", "owner" => "common");
+            $pathitem_properties ["filepath"] = $this->filesystem->get_root();
             $full_path_extended_properties [] = $pathitem_properties;
         }
 
-        ksort ( $full_path_extended_properties );
-        $this -> sense ["pathitem"] = $full_path_extended_properties;
+        ksort($full_path_extended_properties);
+        $this->sense ["pathitem"] = $full_path_extended_properties;
 
     }
 
-    private function pathalyzer ( $parent, $target_path, $offset_index )
+    private function pathalyzer($parent, $target_path, $offset_index)
     {
 
-        $parent_path = $parent [ "filepath" ];
-        $results = array ();
-        if ( is_string ( $target_path ) )
-            $working_path_items = explode ( "/", $target_path );
+        $parent_path = $parent ["filepath"];
+        $results = array();
+        if (is_string($target_path))
+            $working_path_items = explode("/", $target_path);
         else
             $working_path_items = $target_path;
         $working_path_string = $parent_path;
         $controller_exists = false;
 
-        foreach ( $working_path_items as $path_item_index => $path_item_name )
-        {
-            $path_item_properties [ "name" ] = $path_item_name;
+        foreach ($working_path_items as $path_item_index => $path_item_name) {
+            $path_item_properties ["name"] = $path_item_name;
             $working_path_string .= "/" . $path_item_name;
-            if ( is_dir ( $working_path_string ) )
-            {
-                $path_item_properties [ "type" ] = "folder";
-                $path_item_properties [ "url" ] = "lehetoseg 1";
-                $path_item_properties [ "filepath" ] = $working_path_string;
-                $path_item_properties [ "properties" ]["owner"] = $parent [ "properties" ]["owner"];
-            }
-            else
-            {
-                if ( is_file ( $working_path_string.".php" ) )
-                {
-                    $path_item_properties [ "type" ] = "controller";
-                    $path_item_properties [ "url" ] = "lehetoseg 2";
-                    $path_item_properties [ "filepath" ] = $working_path_string.".php";
-                    $path_item_properties [ "properties" ]["mode"] = "file";
-                    $path_item_properties [ "properties" ]["owner"] = $parent [ "properties" ]["owner"];
+            if (is_dir($working_path_string)) {
+                $path_item_properties ["type"] = "folder";
+                $path_item_properties ["url"] = "lehetoseg 1";
+                $path_item_properties ["filepath"] = $working_path_string;
+                $path_item_properties ["properties"]["owner"] = $parent ["properties"]["owner"];
+            } else {
+                if (is_file($working_path_string . ".php")) {
+                    $path_item_properties ["type"] = "controller";
+                    $path_item_properties ["url"] = "lehetoseg 2";
+                    $path_item_properties ["filepath"] = $working_path_string . ".php";
+                    $path_item_properties ["properties"]["mode"] = "file";
+                    $path_item_properties ["properties"]["owner"] = $parent ["properties"]["owner"];
                     $controller_exists = true;
-                    $this -> controller_index = $offset_index + $path_item_index;
-                }
-                else
-                    {
-                        if ( $controller_exists )
-                        {
-                            $path_item_properties [ "type" ] = "parameter";
-                            $path_item_properties [ "url" ] = "lehetoseg 3";
-                            $path_item_properties [ "filepath" ] = false;
-                            $path_item_properties [ "properties" ] = false;
-                        }
-                        else
-                        {
-                            $path_item_properties [ "type" ] = "faulty";
-                            $path_item_properties [ "url" ] = "lehetoseg 4";
-                            $path_item_properties [ "filepath" ] = false;
-                            $path_item_properties [ "properties" ] = false;
-                        }
+                    $this->controller_index = $offset_index + $path_item_index;
+                } else {
+                    if ($controller_exists) {
+                        $path_item_properties ["type"] = "parameter";
+                        $path_item_properties ["url"] = "lehetoseg 3";
+                        $path_item_properties ["filepath"] = false;
+                        $path_item_properties ["properties"] = false;
+                    } else {
+                        $path_item_properties ["type"] = "faulty";
+                        $path_item_properties ["url"] = "lehetoseg 4";
+                        $path_item_properties ["filepath"] = false;
+                        $path_item_properties ["properties"] = false;
                     }
+                }
             }
 
             $results [] = $path_item_properties;
@@ -429,99 +390,86 @@ class route implements interface_route
 
     }
 
-    private function is_common_application ( $path_item_name )
+    private function is_common_application($path_item_name)
     {
-        $filesystem_target = $this -> filesystem -> getcwd () . "/" . $this -> configuration -> filesystem [ "relative_folders" ] [ "common_applications" ] . "/" . $path_item_name;
-        $filesystem_target = preg_replace('~/+~', '/', $filesystem_target );
-        if ( is_dir ( $filesystem_target ) && $path_item_name != "/" )
-        {
+        $filesystem_target = $this->filesystem->get_root() . "/" . $this->configuration->filesystem ["relative_folders"] ["common_applications"] . "/" . $path_item_name;
+        $filesystem_target = preg_replace('~/+~', '/', $filesystem_target);
+        if (is_dir($filesystem_target) && $path_item_name != "/") {
             $result = array
             (
-                        "name" => $path_item_name,
-                        "type" => "application",
-                        "filepath" => $filesystem_target,
-                        "properties" => array ( "mode" => "folder", "owner" => "common" )
+                "name" => $path_item_name,
+                "type" => "application",
+                "filepath" => $filesystem_target,
+                "properties" => array("mode" => "folder", "owner" => "common")
             );
             return $result;
-        }
-        else
-        {
+        } else {
             return false;
         }
     }
 
-    private function is_private_application ( $path_items )
+    private function is_private_application($path_items)
     {
-        $last_item = array_pop ( $path_items );
-        $filesystem_target = $this -> filesystem -> getcwd () . "/" . $this -> configuration -> filesystem [ "relative_folders" ] [ "subdomains" ] . "/" . implode ( "/", $path_items ) . "/" . $this -> configuration -> filesystem [ "relative_folders" ] [ "private_applications" ] . "/" . $last_item;
-        $filesystem_target = preg_replace('~/+~', '/', $filesystem_target );
-        
-        if ( is_dir ( $filesystem_target ) && $last_item != "/" )
-        {
+        $last_item = array_pop($path_items);
+        $filesystem_target = $this->filesystem->get_root() . "/" . $this->configuration->filesystem ["relative_folders"] ["subdomains"] . "/" . implode("/", $path_items) . "/" . $this->configuration->filesystem ["relative_folders"] ["private_applications"] . "/" . $last_item;
+        $filesystem_target = preg_replace('~/+~', '/', $filesystem_target);
+
+        if (is_dir($filesystem_target) && $last_item != "/") {
             $result = array
             (
                 "name" => $last_item,
                 "type" => "application",
-                "properties" => array ( "mode" => "folder", "owner" => "private" ),
+                "properties" => array("mode" => "folder", "owner" => "private"),
                 "filepath" => $filesystem_target
             );
             return $result;
-        }
-        else
-        {
+        } else {
             return false;
         }
     }
 
-    private function is_subdomain ( $path_items )
+    private function is_subdomain($path_items)
     {
         $result = false;
-        $temp = array ();
-        $filesystem_target = $this -> filesystem -> getcwd () . "/" . $this -> configuration -> filesystem [ "relative_folders" ] [ "subdomains" ] . implode ( "/", $path_items );
-        $filesystem_target = preg_replace('~/+~', '/', $filesystem_target );
+        $temp = array();
+        $filesystem_target = $this->filesystem->get_root() . "/" . $this->configuration->filesystem ["relative_folders"] ["subdomains"] . implode("/", $path_items);
+        $filesystem_target = preg_replace('~/+~', '/', $filesystem_target);
 
-        if ( is_dir ( $filesystem_target ) && $filesystem_target !== $this -> filesystem -> getcwd () . "/" . $this -> configuration -> filesystem [ "relative_folders" ] [ "subdomains" ] . "/" )
-        {
+        if (is_dir($filesystem_target) && $filesystem_target !== $this->filesystem->get_root() . "/" . $this->configuration->filesystem ["relative_folders"] ["subdomains"] . "/") {
             $temp = array();
-            foreach ( $path_items as $path_item_index => $path_item_name )
-            {
+            foreach ($path_items as $path_item_index => $path_item_name) {
 
                 $temp [] = $path_item_name;
 
-                $filesystem_target = $this -> filesystem -> getcwd () . "/" . $this -> configuration -> filesystem [ "relative_folders" ] [ "subdomains" ] . "/" . implode ( "/", $temp );
-                $filesystem_target = preg_replace('~/+~', '/', $filesystem_target );
+                $filesystem_target = $this->filesystem->get_root() . "/" . $this->configuration->filesystem ["relative_folders"] ["subdomains"] . "/" . implode("/", $temp);
+                $filesystem_target = preg_replace('~/+~', '/', $filesystem_target);
 
-                $url = implode ( "/", $temp );
-                $url = preg_replace('~/+~', '/', $url );
+                $url = implode("/", $temp);
+                $url = preg_replace('~/+~', '/', $url);
 
-                if ( $path_item_name != "/" )
-                {
-                    $result [] = array (
+                if ($path_item_name != "/") {
+                    $result [] = array(
                         "name" => $path_item_name,
                         "type" => "subdomain",
                         "url" => $url,
                         "filepath" => $filesystem_target,
-                        "properties" => array ( "mode" => "folder", "owner" => "private" ) );
-                }
-                else
-                {
-                    $result [] = array (
+                        "properties" => array("mode" => "folder", "owner" => "private"));
+                } else {
+                    $result [] = array(
                         "name" => "/",
                         "type" => "base",
                         "url" => "",
-                        "filepath" => $this -> filesystem -> getcwd (),
-                        "properties" => array ( "mode" => "folder", "owner" => "common" ) );
+                        "filepath" => $this->filesystem->get_root(),
+                        "properties" => array("mode" => "folder", "owner" => "common"));
                 }
 
                 //array_pop ( $temp );
             }
 
             return $result;
-        }
-        else //TODO: Logical subdomain without folder.
+        } else //TODO: Logical subdomain without folder.
         {
-            if ( $filesystem_target === $this -> filesystem -> getcwd () . "/" . $this -> configuration -> filesystem [ "relative_folders" ] [ "subdomains" ] . "/" )
-            {
+            if ($filesystem_target === $this->filesystem->get_root() . "/" . $this->configuration->filesystem ["relative_folders"] ["subdomains"] . "/") {
                 //TODO: is subdomain? /.../.../.../.../mvcd/subdomains/ no
             }
             return false;
@@ -529,57 +477,57 @@ class route implements interface_route
 
     }
 
-    public function debug ()
+    public function debug()
     {
         print ("<br><h1>route debug</h1>");
-        print ( "url: " . $this -> url . "<br>");
-        var_dump(parse_url($this -> url));
+        print ("url: " . $this->url . "<br>");
+        var_dump(parse_url($this->url));
         print ("<br>");
-        var_dump(parse_url($this -> url));
+        var_dump(parse_url($this->url));
         print ("<br>");
-        var_dump(parse_url($this -> url, PHP_URL_SCHEME));
+        var_dump(parse_url($this->url, PHP_URL_SCHEME));
         print ("<br>");
-        var_dump(parse_url($this -> url, PHP_URL_USER));
+        var_dump(parse_url($this->url, PHP_URL_USER));
         print ("<br>");
-        var_dump(parse_url($this -> url, PHP_URL_PASS));
+        var_dump(parse_url($this->url, PHP_URL_PASS));
         print ("<br>");
-        var_dump(parse_url($this -> url, PHP_URL_HOST));
+        var_dump(parse_url($this->url, PHP_URL_HOST));
         print ("<br>");
-        var_dump(parse_url($this -> url, PHP_URL_PORT));
+        var_dump(parse_url($this->url, PHP_URL_PORT));
         print ("<br>");
-        var_dump(parse_url($this -> url, PHP_URL_PATH));
+        var_dump(parse_url($this->url, PHP_URL_PATH));
         print ("<br>");
-        var_dump(parse_url($this -> url, PHP_URL_QUERY));
+        var_dump(parse_url($this->url, PHP_URL_QUERY));
         print ("<br>");
-        var_dump(parse_url($this -> url, PHP_URL_FRAGMENT));
+        var_dump(parse_url($this->url, PHP_URL_FRAGMENT));
         print ("<br>");
-        print ( '<br>$route -> sense');
+        print ('<br>$route -> sense');
         ob_start();
-        var_dump ( $this -> sense );
-        $dump = ob_get_contents ();
-        ob_end_clean ();
-        $dump = str_replace ( '["', '<span style="color:red; font-weight: bold;">["', $dump );
-        $dump = str_replace ( '"]', '"]</span>', $dump );
+        var_dump($this->sense);
+        $dump = ob_get_contents();
+        ob_end_clean();
+        $dump = str_replace('["', '<span style="color:red; font-weight: bold;">["', $dump);
+        $dump = str_replace('"]', '"]</span>', $dump);
         echo "<pre> $dump </pre>";
 
 
         echo "<br><br>get_controller()<br>";
         ob_start();
-        var_dump ( $this -> get_controller () );
-        $dump = ob_get_contents ();
-        ob_end_clean ();
-        $dump = str_replace ( '["', '<span style="color:red; font-weight: bold;">["', $dump );
-        $dump = str_replace ( '"]', '"]</span>', $dump );
+        var_dump($this->get_controller());
+        $dump = ob_get_contents();
+        ob_end_clean();
+        $dump = str_replace('["', '<span style="color:red; font-weight: bold;">["', $dump);
+        $dump = str_replace('"]', '"]</span>', $dump);
         echo "<pre> $dump </pre>";
 
 
         echo "<br><br>get_application()<br>";
         ob_start();
-        var_dump ( $this -> get_application () );
-        $dump = ob_get_contents ();
-        ob_end_clean ();
-        $dump = str_replace ( '["', '<span style="color:red; font-weight: bold;">["', $dump );
-        $dump = str_replace ( '"]', '"]</span>', $dump );
+        var_dump($this->get_application());
+        $dump = ob_get_contents();
+        ob_end_clean();
+        $dump = str_replace('["', '<span style="color:red; font-weight: bold;">["', $dump);
+        $dump = str_replace('"]', '"]</span>', $dump);
         echo "<pre> $dump </pre>";
 
     }
@@ -588,8 +536,273 @@ class route implements interface_route
     {
         // TODO: Implement __destruct() method.
     }
-}
 
+    function process()
+    {
+        $posibilities = array();
+
+        $item = array(
+            "id" => "",
+            "name" => "",
+            "type" => "",
+            "owner" => "",
+            "path" => "",
+            "child" => array()
+        );
+
+        foreach ($this->point_list as $index => $point_name) {
+            $item ["id"] = $index;
+            $item ["name"] = $point_name;
+            $posibilities [] = $item;
+        }
+
+        $this->recursive($posibilities);
+
+        define("JSON_PRETTY_PRINT", 128);
+        echo json_encode($posibilities, JSON_PRETTY_PRINT);
+
+
+        die ();
+
+        echo "<br><strong>process</strong><br>";
+        echo "<br>point_list<br>";
+        ob_start();
+        var_dump($posibilities);
+        $dump = ob_get_contents();
+        ob_end_clean();
+        $dump = str_replace('["', '<span style="color:red; font-weight: bold;">["', $dump);
+        $dump = str_replace('"]', '"]</span>', $dump);
+        echo "<pre> $dump </pre>";
+
+        //$posibilities = $this -> recursive ();
+
+        //foreach ( $this -> point_list as $index => $point_name )
+
+        //$common_application_directory = $this -> filesystem -> get_root () . "/" . $this -> configuration -> filesystem [ "relative_folders" ] [ "common_applications" ] . "/";
+
+        /*        foreach ( $this -> point_list as $index => $point_name )
+                {
+                    if ( is_dir ( $common_application_directory . $point_name ) )
+                    {
+                        $posibilities [ $index ] [] = $common_application_directory . $point_name;
+                    }
+                }*/
+
+
+        echo "<br>posibilities<br>";
+        ob_start();
+        var_dump($posibilities);
+        $dump = ob_get_contents();
+        ob_end_clean();
+        $dump = str_replace('["', '<span style="color:red; font-weight: bold;">["', $dump);
+        $dump = str_replace('"]', '"]</span>', $dump);
+        echo "<pre> $dump </pre>";
+    }
+
+    function recursive(&$target, $parent_path = "")
+    {
+        foreach ($target as $index => $item) {
+            echo("root? " . $item ["name"]);
+            if ($item ["name"] === "/") {
+                echo(" - yes<br>");
+            } else {
+                echo(" - no<br>");
+                //$common_application_directory = $this -> filesystem -> get_root () . "/" . $this -> configuration -> filesystem [ "relative_folders" ] [ "common_applications" ] . "/";
+                if ($parent_path !== "")
+                    $subdomain_directory = $parent_path;
+                else
+                    $subdomain_directory = $this->filesystem->get_root() . "/" . $this->configuration->filesystem ["relative_folders"] ["subdomains"] . "/";
+
+                echo("subdomain? " . $subdomain_directory . $item ["name"]);
+                if (is_dir($subdomain_directory . $item ["name"])) {
+                    echo(" - yes<br>");
+                    $target [$index] ["path"] = $subdomain_directory . $item ["name"];
+                    $target [$index] ["child"] = array_slice($target, $index + 1, count($target) - 1);
+                    $this->recursive($target [$index] ["child"], $subdomain_directory);
+                } else
+                    echo(" - no<br>");
+
+                /*
+                                echo ( "common app? " . $common_application_directory . $item [ "name" ] );
+                                if ( is_dir ( $common_application_directory . $item [ "name" ] ) )
+                                {
+                                    echo ( " - yes<br>" );
+                                }
+                                else
+                                    echo ( " - no<br>" );
+                */
+            }
+            print ("<br>next</br>");
+        }
+        print ("<br>exiting...</br>");
+    }
+
+    function builder()
+    {
+
+        $common_applications_root_directory = $this -> filesystem -> get_root () . "/" . $this -> configuration -> filesystem [ "relative_folders" ][ "common_applications" ];
+        $common_application_routes = array ();
+
+        $iterator = new \RecursiveIteratorIterator ( new \RecursiveDirectoryIterator ( $common_applications_root_directory ), \RecursiveIteratorIterator::SELF_FIRST );
+        $iterator -> setFlags ( \RecursiveDirectoryIterator::SKIP_DOTS );
+
+        foreach ( $iterator as $path )
+        {
+            if ( $path -> isDir () )
+            {
+                if ( $path -> __toString () != $common_applications_root_directory )
+                {
+                    $target = $path -> __toString () . "/" . $this -> configuration -> core [ "default_controller" ] . ".php";
+                    $route = str_replace ( $common_applications_root_directory, "", $path -> __toString () );
+                    $common_application_routes [ $route ] = $target;
+                }
+
+            }
+            else
+            {
+                if ( preg_match ( "/\.(php|phtml)*$/i", $path -> __toString (), $matches ) )
+                {
+                    $target = $path -> __toString ();
+                    $info = pathinfo ( $path -> __toString () );
+                    $route = str_replace ( "." . $info [ 'extension' ], "", str_replace ( $common_applications_root_directory, "", $path -> __toString () ) );
+                    $common_application_routes [ $route ] = $target;
+                }
+            }
+        }
+
+        $array_keys = array_map ( 'strlen', array_keys ( $common_application_routes ) );
+        array_multisort ( $array_keys, SORT_DESC, $common_application_routes );
+
+                                                echo "<br>common_application_routes<br>";
+                                                ob_start();
+                                                var_dump($common_application_routes);
+                                                $dump = ob_get_contents();
+                                                ob_end_clean();
+                                                $dump = str_replace('["', '<span style="color:red; font-weight: bold;">["', $dump);
+                                                $dump = str_replace('"]', '"]</span>', $dump);
+                                                echo "<pre> $dump </pre>";
+
+                                                print ("<hr>");
+
+        $subdomains_root_directory = $this -> filesystem -> get_root () . "/" . $this -> configuration -> filesystem [ "relative_folders" ][ "subdomains" ];
+        $subdomains_routes = array ();
+        $excluded_directories = $this -> configuration -> filesystem [ "relative_folders" ];
+        $excluded_directories = array_values ( $excluded_directories );
+
+        $iterator = new \RecursiveIteratorIterator ( new \RecursiveDirectoryIterator ( $subdomains_root_directory ), \RecursiveIteratorIterator::SELF_FIRST );
+        $iterator -> setFlags ( \RecursiveDirectoryIterator::SKIP_DOTS );
+
+        while ( $iterator -> valid () )
+        {
+            $path_string = str_replace ( $subdomains_root_directory, $this -> configuration -> core [ "root_domain" ], $iterator -> key () );
+            $path_array = explode ( "/", $path_string );
+            $excluded_path = array_intersect ( $excluded_directories, $path_array );
+            $excluded_path = !empty ( $excluded_path );
+            if ( !$excluded_path )
+            {
+                $route = str_replace ( $subdomains_root_directory, "", $iterator -> key () );
+                $target = $iterator -> key ();
+                $subdomains_routes [ $route ] = $target;
+            }
+
+            $iterator -> next ();
+
+        }
+
+        $array_keys = array_map ( 'strlen', array_keys ( $subdomains_routes ) );
+        array_multisort ( $array_keys, SORT_DESC, $subdomains_routes );
+
+
+                                                    echo "<br>subdomains_routes<br>";
+                                                    ob_start();
+                                                    var_dump($subdomains_routes);
+                                                    $dump = ob_get_contents();
+                                                    ob_end_clean();
+                                                    $dump = str_replace('["', '<span style="color:red; font-weight: bold;">["', $dump);
+                                                    $dump = str_replace('"]', '"]</span>', $dump);
+                                                    echo "<pre> $dump </pre>";
+
+                                                    print ("<hr>");
+
+        foreach ( $subdomains_routes as $subdomain_route_key => $subdomain_route_value )
+        {
+            foreach ( $common_application_routes as $common_application_route_key => $common_application_route_value )
+            {
+                $all_routes [] = $this -> get_domain() . $subdomain_route_key . $common_application_route_key;
+            }
+        }
+
+                                                    echo "<br>all_routes<br>";
+                                                    ob_start();
+                                                    var_dump($all_routes);
+                                                    $dump = ob_get_contents();
+                                                    ob_end_clean();
+                                                    $dump = str_replace('["', '<span style="color:red; font-weight: bold;">["', $dump);
+                                                    $dump = str_replace('"]', '"]</span>', $dump);
+                                                    echo "<pre> $dump </pre>";
+
+                                                    print ("<hr>");
+
+        die();
+
+
+        print ("<hr><hr>");
+        foreach ( $iterator as $path )
+        {
+/*            $path_string = str_replace($subdomains_root_directory,$this -> configuration -> core ["root_domain"],$path->__toString());
+            if
+            (
+                !in_array ( substr( strrchr( $path_string, '/' ), 1 ), $this -> configuration -> filesystem ["relative_folders"], TRUE ) &&
+                !in_array($path->getSubPath(), $excluded_directories)
+            )
+            {
+                print ($path_string."<br>");
+            }*/
+        }
+
+        print ("<hr>");
+
+        $domains_root_directory =  $this -> filesystem -> get_root () . "/" . $this -> configuration -> filesystem ["relative_folders"][ "domains" ];
+        $subdomains_routes = array ();
+
+        $iterator = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($domains_root_directory), \RecursiveIteratorIterator::SELF_FIRST );
+        $iterator->setFlags(\RecursiveDirectoryIterator::SKIP_DOTS);
+
+        foreach ( $iterator as $path )
+        {
+            $route = str_replace($domains_root_directory,$this -> configuration -> core ["root_domain"],$path->__toString());
+            //print ($route."<br>");
+
+        }
+
+
+        /*
+        $filetypes = array("jpg", "png");
+        if (!preg_match("/\.(" . implode("|", $filetypes) . ")*$/i", $file, $matches)) {
+            echo $file;
+        }
+*/
+
+    }
+
+
+/*
+    function recursive ( $index = 0, $as = "" ) //as = application, controller, folder, paramterer
+    {
+        $common_application_directory = $this -> filesystem -> get_root () . "/" . $this -> configuration -> filesystem [ "relative_folders" ] [ "common_applications" ] . "/";
+        $subdomain_directory = $this -> filesystem -> get_root () . "/" . $this -> configuration -> filesystem [ "relative_folders" ] [ "subdomains" ] . "/";
+        $source = array_slice ( $this -> point_list, $index, count ( $this -> point_list ) - 1 );
+        foreach ( $source as $index => $point_name )
+        {
+            if ( is_dir ( $common_application_directory . $point_name ) )
+            {
+                $this -> recursive ( $index = 0, $as = "" )
+            }
+        }
+        $result
+    }
+*/
+}
 
 
 
@@ -664,7 +877,7 @@ class route implements interface_route
             //$pathitem_name = substr ( $pathitem_relative_path, strrpos ( rtrim ( $pathitem_relative_path, '/' ), '/' ) + 1 );
         }
 
-        $filesystem_target = $this -> filesystem -> getcwd () . "/" . $this -> configuration -> filesystem [ "relative_folders" ] [ "applications" ] . "/" . $pathitem_name;
+        $filesystem_target = $this -> filesystem -> get_root () . "/" . $this -> configuration -> filesystem [ "relative_folders" ] [ "applications" ] . "/" . $pathitem_name;
         Print ( "<br>looking for: " . $filesystem_target . "<br>" );
 
         if ( is_dir ( $filesystem_target ) )
@@ -679,7 +892,7 @@ class route implements interface_route
 
     function isSubdomain ( $pathitem_relative_path )
     {
-        $filesystem_target = $this -> filesystem -> getcwd () . "/" . $this -> configuration -> filesystem [ "relative_folders" ] [ "subdomains" ] . $pathitem_relative_path;
+        $filesystem_target = $this -> filesystem -> get_root () . "/" . $this -> configuration -> filesystem [ "relative_folders" ] [ "subdomains" ] . $pathitem_relative_path;
         if ( is_dir ( $filesystem_target ) )
         {
             $result = array ( "type" => "subdomain", "properties" => array ( "mode" => "folder" ), "filepath" => $filesystem_target );
@@ -699,7 +912,7 @@ class route implements interface_route
             //$pathitem_name = substr ( $pathitem_relative_path, strrpos ( rtrim ( $pathitem_relative_path, '/' ), '/' ) + 1 );
         }
 
-        $filesystem_target = $this -> filesystem -> getcwd () . "/controllers/" . $pathitem_name . ".php";
+        $filesystem_target = $this -> filesystem -> get_root () . "/controllers/" . $pathitem_name . ".php";
         if ( is_file ( $filesystem_target ) )
         {
             $result = array ( "type" => "controller", "properties" => array ( "mode" => "file", "owner" => "common" ), "filepath" => $filesystem_target );
@@ -707,7 +920,7 @@ class route implements interface_route
         }
         else //TODO: Logical controller without file.
         {
-            $filesystem_target = $this -> filesystem -> getcwd () . "/subdomains" . rtrim ( $pathitem_relative_path, $pathitem_name . "/" ) . "/" . $pathitem_name . ".php";
+            $filesystem_target = $this -> filesystem -> get_root () . "/subdomains" . rtrim ( $pathitem_relative_path, $pathitem_name . "/" ) . "/" . $pathitem_name . ".php";
             if ( is_file ( $filesystem_target ) )
             {
                 $result = array ( "type" => "controller", "properties" => array ( "mode" => "file", "owner" => "private" ), "filepath" => $filesystem_target );

@@ -16,7 +16,10 @@ class configuration implements ibasic
     (
         "default_application" => "default",
         "default_controller"  => "main",
-        "namespace"           => 'improwerk\implement\mvcd\\'
+        "routable_prefix"     => "!",
+        "routable_suffix"     => "!",
+        "namespace"           => 'improwerk\implement\mvcd\\',
+        "root_domain"         => "ertelmetlen.hu"
     );
 
     //Filesystem
@@ -25,10 +28,11 @@ class configuration implements ibasic
         "relative_folders" => array
         (
             "private_applications" => "applications",
-            "common_applications" => "applications",
-            "subdomains"   => "subdomains",
-            "controllers"  => "controllers",
-            "users"        => "users"
+            "common_applications"  => "applications",
+            "subdomains"           => "subdomains",
+            "user_files"           => "files",
+            "cache"                => "cache",
+            "temporary"            => "tmp"
         )
     );
 

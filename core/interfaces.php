@@ -39,13 +39,11 @@ interface interface_route
     public function __destruct();
 }
 
-interface interface_path_item
+interface interface_routing_point
 {
-/*    private $name = "";
-    private $type;
-    private $parent;
-    private $sibling;
-    private $properties = array ();*/
     public function __construct ();
     public function __destruct ();
+    public function is_common_application ();
+    public function is_private_application ();
+    public function is_subdomain ();
 }
