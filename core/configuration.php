@@ -14,12 +14,14 @@ class configuration implements ibasic
     //Global
     public $core = array
     (
-        "default_application" => "default",
-        "default_controller"  => "main",
-        "routable_prefix"     => "!",
-        "routable_suffix"     => "!",
-        "namespace"           => 'improwerk\implement\mvcd\\',
-        "root_domain"         => "ertelmetlen.hu"
+        "root_domain"            => "ertelmetlen.hu",
+        "default_application"    => "default",
+        "default_controller"     => "main",
+        "routable_script_prefix" => "route.",
+        "routable_script_suffix" => "__",
+        "routable_folder_prefix" => "route.",
+        "routable_folder_suffix" => "!",
+        "namespace"              => 'improwerk\implement\mvcd\\'
     );
 
     //Filesystem

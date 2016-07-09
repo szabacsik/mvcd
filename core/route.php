@@ -637,8 +637,9 @@ class route implements interface_route
         print ("<br>exiting...</br>");
     }
 
-    function builder()
+    function builder ()
     {
+        $default_controller_filename = $this -> configuration -> core [ "routable_script_prefix" ] . $this -> configuration -> core [ "default_controller" ] . $this -> configuration -> core [ "routable_script_suffix" ] . ".php";
 
         $common_applications_root_directory = $this -> filesystem -> get_root () . "/" . $this -> configuration -> filesystem [ "relative_folders" ][ "common_applications" ];
         $common_application_routes = array ();
@@ -650,23 +651,45 @@ class route implements interface_route
         {
             if ( $path -> isDir () )
             {
-                if ( $path -> __toString () != $common_applications_root_directory )
+                if
+                (
+                    $path -> __toString () != $common_applications_root_directory &&
+                    $this -> is_routeable ( $path -> __toString () )
+                )
                 {
                     $target = $path -> __toString () . "/" . $this -> configuration -> core [ "default_controller" ] . ".php";
                     $route = str_replace ( $common_applications_root_directory, "", $path -> __toString () );
                     $common_application_routes [ $route ] = $target;
                 }
-
             }
             else
             {
-                if ( preg_match ( "/\.(php|phtml)*$/i", $path -> __toString (), $matches ) )
+                $info = pathinfo ( $path -> __toString () );
+                $prefix = $this -> configuration -> core [ "routable_script_prefix" ];
+                $suffix = $this -> configuration -> core [ "routable_script_suffix" ];
+                //print ( "prefix: ".$prefix."<br>suffix: ".$suffix."<br>");
+                $real_name = str_replace ( $prefix, "", $info [ 'filename' ] );
+                $real_name = str_replace ( $suffix, "", $real_name );
+
+                $start = substr_compare ( $info [ 'filename'], $prefix, 0 );
+
+                //print ( "filename: " . $info [ 'filename' ] . " realname: " . $real_name . " start: " . $start . " routable? " );
+                //print ("<br>"."/^" . $prefix . "\..*" . $suffix . "$/"."<br>");
+                if
+                ( //http://www.phpliveregex.com/
+                    preg_match ( "/\.(php|phtml)*$/i", $path -> __toString (), $matches ) //&&
+
+                    //preg_match ( "/^route\..*__$/", $info [ 'filename' ], $matches )
+                )
                 {
+                    //print (" - yes" . "<br>");
                     $target = $path -> __toString ();
-                    $info = pathinfo ( $path -> __toString () );
                     $route = str_replace ( "." . $info [ 'extension' ], "", str_replace ( $common_applications_root_directory, "", $path -> __toString () ) );
                     $common_application_routes [ $route ] = $target;
                 }
+                else
+                {}
+                    //print (" - no" . "<br>");
             }
         }
 
@@ -783,6 +806,45 @@ class route implements interface_route
         }
 */
 
+    }
+
+    function is_routeable ( $filepath )
+    {
+        print ("is routable?<br>");
+        print ($filepath."<br>");
+
+        $info = pathinfo ( $filepath );
+        $prefix = false;
+        $suffix = false;
+
+        if ( is_dir ( $filepath ) )
+        {
+            $filename = $info [ "filename" ] . "." . $info [ "extension" ];
+            $prefix = $this -> configuration -> core [ "routable_script_prefix" ];
+            $suffix = $this -> configuration -> core [ "routable_script_suffix" ];
+        }
+
+        elseif ( is_file ( $filepath ) )
+        {
+            $filename = $info [ "filename" ];
+            $prefix = $this -> configuration -> core [ "routable_folder_prefix" ];
+            $suffix = $this -> configuration -> core [ "routable_folder_suffix" ];
+        }
+
+        if ( !$prefix || !$suffix ) return false;
+
+        $real_name = str_replace ( $prefix, "", $filename );
+        $real_name = str_replace ( $suffix, "", $real_name );
+
+        //$start = substr_compare ( $filename, $prefix, 0 );
+        $start = strpos ( $filename, $prefix );
+        $prefix_match = $start === 0;
+
+        $end = strpos ( $filename, $suffix );
+
+        print ( "filename=" . $filename . "  suffix=" . $suffix . "  end=" . $end . "<br>");
+
+        print ("<br><hr><br>");
     }
 
 
