@@ -637,14 +637,13 @@ class route implements interface_route
         print ("<br>exiting...</br>");
     }
 
-    function builder ()
+
+    private function application_route_builder ( $applications_root_directory )
     {
-        $default_controller_filename = $this -> configuration -> core [ "routable_script_prefix" ] . $this -> configuration -> core [ "default_controller" ] . $this -> configuration -> core [ "routable_script_suffix" ] . ".php";
+        //$applications_root_directory = $this -> filesystem -> get_root () . "/" . $this -> configuration -> filesystem [ "relative_folders" ][ "common_applications" ];
+        $application_routes = array ();
 
-        $common_applications_root_directory = $this -> filesystem -> get_root () . "/" . $this -> configuration -> filesystem [ "relative_folders" ][ "common_applications" ];
-        $common_application_routes = array ();
-
-        $iterator = new \RecursiveIteratorIterator ( new \RecursiveDirectoryIterator ( $common_applications_root_directory ), \RecursiveIteratorIterator::SELF_FIRST );
+        $iterator = new \RecursiveIteratorIterator ( new \RecursiveDirectoryIterator ( $applications_root_directory ), \RecursiveIteratorIterator::SELF_FIRST );
         $iterator -> setFlags ( \RecursiveDirectoryIterator::SKIP_DOTS );
 
         foreach ( $iterator as $path )
@@ -653,46 +652,41 @@ class route implements interface_route
             {
                 if
                 (
-                    $path -> __toString () != $common_applications_root_directory &&
-                    $this -> is_routeable ( $path -> __toString () )
+                    $path -> __toString () != $applications_root_directory &&
+                    $this -> is_routable_path ( $applications_root_directory, str_replace ( $applications_root_directory, "", $path -> __toString () ) )
                 )
                 {
-                    $target = $path -> __toString () . "/" . $this -> configuration -> core [ "default_controller" ] . ".php";
-                    $route = str_replace ( $common_applications_root_directory, "", $path -> __toString () );
-                    $common_application_routes [ $route ] = $target;
+                    $target = $path -> __toString () . "/" . $this -> default_controller_filename ();
+                    $route = $this -> clean_route_name ( str_replace ( $applications_root_directory, "", $path -> __toString () ) );
+                    $application_routes [ $route ] = $target;
                 }
             }
             else
             {
-                $info = pathinfo ( $path -> __toString () );
-                $prefix = $this -> configuration -> core [ "routable_script_prefix" ];
-                $suffix = $this -> configuration -> core [ "routable_script_suffix" ];
-                //print ( "prefix: ".$prefix."<br>suffix: ".$suffix."<br>");
-                $real_name = str_replace ( $prefix, "", $info [ 'filename' ] );
-                $real_name = str_replace ( $suffix, "", $real_name );
-
-                $start = substr_compare ( $info [ 'filename'], $prefix, 0 );
-
-                //print ( "filename: " . $info [ 'filename' ] . " realname: " . $real_name . " start: " . $start . " routable? " );
-                //print ("<br>"."/^" . $prefix . "\..*" . $suffix . "$/"."<br>");
                 if
-                ( //http://www.phpliveregex.com/
-                    preg_match ( "/\.(php|phtml)*$/i", $path -> __toString (), $matches ) //&&
-
-                    //preg_match ( "/^route\..*__$/", $info [ 'filename' ], $matches )
+                (
+                $this -> is_routable_path ( $applications_root_directory, str_replace ( $applications_root_directory, "", $path -> __toString () ) )
                 )
                 {
-                    //print (" - yes" . "<br>");
                     $target = $path -> __toString ();
-                    $route = str_replace ( "." . $info [ 'extension' ], "", str_replace ( $common_applications_root_directory, "", $path -> __toString () ) );
-                    $common_application_routes [ $route ] = $target;
+                    $route = $this -> clean_route_name ( str_replace ( $applications_root_directory, "", $path -> __toString () ) );
+                    $application_routes [ $route ] = $target;
                 }
-                else
-                {}
-                    //print (" - no" . "<br>");
             }
         }
 
+        return $application_routes;
+
+    }
+
+
+    function builder ()
+    {
+
+        $common_applications_root_directory = $this -> filesystem -> get_root () . "/" . $this -> configuration -> filesystem [ "relative_folders" ][ "common_applications" ];
+        $common_application_routes = $this -> application_route_builder ( $common_applications_root_directory );
+        $common_application_routes [ "/" ] = $common_applications_root_directory . "/" . $this -> default_application_folder_name () . "/" . $this -> default_controller_filename ();
+        $common_application_routes [ "" ] = $common_applications_root_directory . "/" . $this -> default_application_folder_name () . "/" . $this -> default_controller_filename ();
         $array_keys = array_map ( 'strlen', array_keys ( $common_application_routes ) );
         array_multisort ( $array_keys, SORT_DESC, $common_application_routes );
 
@@ -704,7 +698,6 @@ class route implements interface_route
                                                 $dump = str_replace('["', '<span style="color:red; font-weight: bold;">["', $dump);
                                                 $dump = str_replace('"]', '"]</span>', $dump);
                                                 echo "<pre> $dump </pre>";
-
                                                 print ("<hr>");
 
         $subdomains_root_directory = $this -> filesystem -> get_root () . "/" . $this -> configuration -> filesystem [ "relative_folders" ][ "subdomains" ];
@@ -721,11 +714,18 @@ class route implements interface_route
             $path_array = explode ( "/", $path_string );
             $excluded_path = array_intersect ( $excluded_directories, $path_array );
             $excluded_path = !empty ( $excluded_path );
+            $route = str_replace ( $subdomains_root_directory, "", $iterator -> key () );
             if ( !$excluded_path )
             {
-                $route = str_replace ( $subdomains_root_directory, "", $iterator -> key () );
                 $target = $iterator -> key ();
                 $subdomains_routes [ $route ] = $target;
+            }
+
+            if ( preg_match("/(" . $this->configuration->filesystem ["relative_folders"] ["private_applications"] . "|\/" . $this->configuration->filesystem ["relative_folders"] ["private_applications"] . "\/|" . $this->configuration->filesystem ["relative_folders"] ["private_applications"] . "\/)$/", $iterator -> key (), $output_array ) )
+            {
+                $subdomain = preg_replace ("/(" . $this->configuration->filesystem ["relative_folders"] ["private_applications"] . "|\/" . $this->configuration->filesystem ["relative_folders"] ["private_applications"] . "\/|" . $this->configuration->filesystem ["relative_folders"] ["private_applications"] . "\/)$/", "", $route );
+                //print ("subdomain: ".$subdomain." has private application: ".$route." / ".$target."<br>");
+                $subdomains_private_application_routes [ $subdomain ] = $this -> application_route_builder ( $iterator -> key () );
             }
 
             $iterator -> next ();
@@ -735,6 +735,8 @@ class route implements interface_route
         $array_keys = array_map ( 'strlen', array_keys ( $subdomains_routes ) );
         array_multisort ( $array_keys, SORT_DESC, $subdomains_routes );
 
+        //$array_keys = array_map ( 'strlen', array_keys ( $private_application_routes ) );
+        //array_multisort ( $array_keys, SORT_DESC, $private_application_routes );
 
                                                     echo "<br>subdomains_routes<br>";
                                                     ob_start();
@@ -744,7 +746,16 @@ class route implements interface_route
                                                     $dump = str_replace('["', '<span style="color:red; font-weight: bold;">["', $dump);
                                                     $dump = str_replace('"]', '"]</span>', $dump);
                                                     echo "<pre> $dump </pre>";
+                                                    print ("<hr>");
 
+                                                    echo "<br>subdomains_private_application_routes<br>";
+                                                    ob_start();
+                                                    var_dump($subdomains_private_application_routes);
+                                                    $dump = ob_get_contents();
+                                                    ob_end_clean();
+                                                    $dump = str_replace('["', '<span style="color:red; font-weight: bold;">["', $dump);
+                                                    $dump = str_replace('"]', '"]</span>', $dump);
+                                                    echo "<pre> $dump </pre>";
                                                     print ("<hr>");
 
         foreach ( $subdomains_routes as $subdomain_route_key => $subdomain_route_value )
@@ -762,11 +773,11 @@ class route implements interface_route
                                                     ob_end_clean();
                                                     $dump = str_replace('["', '<span style="color:red; font-weight: bold;">["', $dump);
                                                     $dump = str_replace('"]', '"]</span>', $dump);
-                                                    echo "<pre> $dump </pre>";
+                                                   // echo "<pre> $dump </pre>";
 
                                                     print ("<hr>");
 
-        die();
+        die ( "aborting here. testing." );
 
 
         print ("<hr><hr>");
@@ -808,18 +819,33 @@ class route implements interface_route
 
     }
 
-    function is_routeable ( $filepath )
+    function is_routable_path ( $base, $relative_path )
     {
-        print ("is routable?<br>");
-        print ($filepath."<br>");
+        $path = $base;
+        $elements = explode ( "/", $relative_path );
+        foreach ( $elements as $index => $element )
+        {
+            if ( $element !== "" )
+            {
+                $path .= "/" . $element;
+                if ( !$this -> is_routeable_file ( $path ) ) return false;
+            }
+        }
+        return ( true );
+    }
 
+    function is_routeable_file ( $filepath )
+    {
         $info = pathinfo ( $filepath );
         $prefix = false;
         $suffix = false;
 
         if ( is_dir ( $filepath ) )
         {
-            $filename = $info [ "filename" ] . "." . $info [ "extension" ];
+            if ( $info [ "extension" ] )
+                $filename = $info [ "filename" ] . "." . $info [ "extension" ];
+            else
+                $filename = $info [ "filename" ];
             $prefix = $this -> configuration -> core [ "routable_script_prefix" ];
             $suffix = $this -> configuration -> core [ "routable_script_suffix" ];
         }
@@ -827,24 +853,49 @@ class route implements interface_route
         elseif ( is_file ( $filepath ) )
         {
             $filename = $info [ "filename" ];
+            if ( $info [ "extension" ] !== $this -> configuration -> core [ 'script_extension' ] ) return false;
             $prefix = $this -> configuration -> core [ "routable_folder_prefix" ];
             $suffix = $this -> configuration -> core [ "routable_folder_suffix" ];
         }
 
-        if ( !$prefix || !$suffix ) return false;
+        if ( !$prefix && !$suffix ) return false;
 
-        $real_name = str_replace ( $prefix, "", $filename );
-        $real_name = str_replace ( $suffix, "", $real_name );
+        $prefix_escaped = str_replace ( "." , "\." , $prefix );
+        $suffix_escaped = str_replace ( "." , "\." , $suffix );
 
-        //$start = substr_compare ( $filename, $prefix, 0 );
-        $start = strpos ( $filename, $prefix );
-        $prefix_match = $start === 0;
+        if ( preg_match ("/^" . $prefix_escaped . ".*" . $suffix_escaped . "$/" , $filename, $match ) )
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
 
-        $end = strpos ( $filename, $suffix );
+    private function default_controller_filename ()
+    {
+        return $this -> configuration -> core [ "routable_script_prefix" ] . $this -> configuration -> core [ "default_controller" ] . $this -> configuration -> core [ "routable_script_suffix" ] . "." . $this -> configuration -> core [ "script_extension" ];
+    }
 
-        print ( "filename=" . $filename . "  suffix=" . $suffix . "  end=" . $end . "<br>");
+    private function default_application_folder_name ()
+    {
+        return $this -> configuration -> core [ "routable_folder_prefix" ] . $this -> configuration -> core [ "default_application" ] . $this -> configuration -> core [ "routable_folder_suffix" ];
+    }
 
-        print ("<br><hr><br>");
+    private function clean_route_name ( $target )
+    {
+
+        $prefix = $this -> configuration -> core [ "routable_script_prefix" ];
+        $suffix = $this -> configuration -> core [ "routable_script_suffix" ];
+        $extension = "." . $this -> configuration -> core [ "script_extension" ];
+
+        $result = str_replace ( $prefix, "", $target );
+        $result = str_replace ( $suffix, "", $result );
+        $result = str_replace ( $extension, "", $result );
+
+        return $result;
+
     }
 
 

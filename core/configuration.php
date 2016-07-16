@@ -17,10 +17,11 @@ class configuration implements ibasic
         "root_domain"            => "ertelmetlen.hu",
         "default_application"    => "default",
         "default_controller"     => "main",
-        "routable_script_prefix" => "route.",
-        "routable_script_suffix" => "__",
-        "routable_folder_prefix" => "route.",
-        "routable_folder_suffix" => "!",
+        "routable_script_prefix" => "",
+        "routable_script_suffix" => ".route",
+        "routable_folder_prefix" => "",
+        "routable_folder_suffix" => ".route",
+        "script_extension"       => "php",
         "namespace"              => 'improwerk\implement\mvcd\\'
     );
 
@@ -32,9 +33,13 @@ class configuration implements ibasic
             "private_applications" => "applications",
             "common_applications"  => "applications",
             "subdomains"           => "subdomains",
+            "domains"              => "domains",
             "user_files"           => "files",
             "cache"                => "cache",
-            "temporary"            => "tmp"
+            "temporary"            => "tmp",
+            "includes"             => "inc",
+            "libraries"            => "lib",
+            "styles"               => "css"
         )
     );
 
