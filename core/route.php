@@ -679,6 +679,70 @@ class route implements interface_route
 
     }
 
+    private function domain_route_builder ( $subdomains_root_directory, $private_applications_directory_name, $excluded_directories = false )
+    {
+        //$subdomains_root_directory = $this -> filesystem -> get_root () . "/" . $this -> configuration -> filesystem [ "relative_folders" ][ "subdomains" ];
+        //$private_applications_directory_name = $this->configuration->filesystem ["relative_folders"] ["private_applications"];
+
+        Print ("<br>domain route builder<br>");
+        Print ("subdomains_root_directory=".$subdomains_root_directory."<br>");
+
+        $subdomains_routes = array ();
+        $subdomains_private_application_routes = false;
+
+        if ( !is_array ( $excluded_directories ) )
+        {
+            $excluded_directories = $this->configuration->filesystem ["relative_folders"];
+            $excluded_directories = array_values($excluded_directories);
+        }
+
+        $iterator = new \RecursiveIteratorIterator ( new \RecursiveDirectoryIterator ( $subdomains_root_directory ), \RecursiveIteratorIterator::SELF_FIRST );
+        $iterator -> setFlags ( \RecursiveDirectoryIterator::SKIP_DOTS );
+
+        while ( $iterator -> valid () )
+        {
+            if ( !preg_match ( "/(\.|\..)$/", $iterator->key(), $output_array ) )
+            {
+                print ("checkin: " . $iterator->key() . "<br>");
+                $path_string = str_replace($subdomains_root_directory, $this->configuration->core ["root_domain"], $iterator->key());
+                $path_array = explode("/", $path_string);
+                $excluded_path = array_intersect($excluded_directories, $path_array);
+                $excluded_path = !empty ($excluded_path);
+                $route = str_replace($subdomains_root_directory, "", $iterator->key());
+                if (!$excluded_path) {
+                    $target = $iterator->key();
+                    $subdomains_routes [$route] = $target;
+                }
+
+                if (preg_match("/(" . $private_applications_directory_name . "|\/" . $private_applications_directory_name . "\/|" . $private_applications_directory_name . "\/)$/", $iterator->key(), $output_array)) {
+                    $subdomain = preg_replace("/(" . $private_applications_directory_name . "|\/" . $private_applications_directory_name . "\/|" . $private_applications_directory_name . "\/)$/", "", $route);
+                    $subdomains_private_application_routes [$subdomain] = $this->application_route_builder($iterator->key());
+                }
+            }
+
+            $iterator -> next ();
+
+        }
+
+        $array_keys = array_map ( 'strlen', array_keys ( $subdomains_routes ) );
+        array_multisort ( $array_keys, SORT_DESC, $subdomains_routes );
+
+        if ( is_array ( $subdomains_private_application_routes ) ) {
+            foreach ($subdomains_private_application_routes as $subdomain_index => $subdomain_private_application_routes) {
+                $array_keys = array_map('strlen', array_keys($subdomains_private_application_routes [$subdomain_index]));
+                array_multisort($array_keys, SORT_DESC, $subdomains_private_application_routes [$subdomain_index]);
+            }
+        }
+
+        $result [ "subdomain_routes" ] = $subdomains_routes;
+        $result [ "application_routes" ] = $subdomains_private_application_routes;
+
+        unset($iterator);
+
+        return $result;
+
+    }
+
 
     function builder ()
     {
@@ -700,6 +764,19 @@ class route implements interface_route
                                                 echo "<pre> $dump </pre>";
                                                 print ("<hr>");
 
+        $subdomains_root_directory = $this -> filesystem -> get_root () . "/" . $this -> configuration -> filesystem [ "relative_folders" ][ "subdomains" ];
+        $private_applications_directory_name = $this->configuration->filesystem ["relative_folders"] ["private_applications"];
+        $domain_route_builder_results = $this -> domain_route_builder ( $subdomains_root_directory, $private_applications_directory_name );
+        $subdomains_routes = $domain_route_builder_results [ "subdomain_routes" ];
+        $subdomains_private_application_routes = $domain_route_builder_results [ "application_routes" ];
+
+        $domains_root_directory = $this -> filesystem -> get_root () . "/" . $this -> configuration -> filesystem [ "relative_folders" ][ "domains" ];
+        $private_applications_directory_name = $this->configuration->filesystem ["relative_folders"] ["private_applications"];
+        $domain_route_builder_results = $this -> domain_route_builder ( $domains_root_directory, $private_applications_directory_name );
+        $domains_routes = $domain_route_builder_results [ "subdomain_routes" ];
+        $domains_private_application_routes = $domain_route_builder_results [ "application_routes" ];
+
+        /*
         $subdomains_root_directory = $this -> filesystem -> get_root () . "/" . $this -> configuration -> filesystem [ "relative_folders" ][ "subdomains" ];
         $subdomains_routes = array ();
         $excluded_directories = $this -> configuration -> filesystem [ "relative_folders" ];
@@ -735,8 +812,32 @@ class route implements interface_route
         $array_keys = array_map ( 'strlen', array_keys ( $subdomains_routes ) );
         array_multisort ( $array_keys, SORT_DESC, $subdomains_routes );
 
-        //$array_keys = array_map ( 'strlen', array_keys ( $private_application_routes ) );
-        //array_multisort ( $array_keys, SORT_DESC, $private_application_routes );
+        foreach ( $subdomains_private_application_routes as $subdomain_index => $subdomain_private_application_routes )
+        {
+            $array_keys = array_map ( 'strlen', array_keys ( $subdomains_private_application_routes [ $subdomain_index ] ) );
+            array_multisort ( $array_keys, SORT_DESC, $subdomains_private_application_routes [ $subdomain_index ] );
+        }
+        */
+
+                                                    echo "<br>domains_routes<br>";
+                                                    ob_start();
+                                                    var_dump($domains_routes);
+                                                    $dump = ob_get_contents();
+                                                    ob_end_clean();
+                                                    $dump = str_replace('["', '<span style="color:red; font-weight: bold;">["', $dump);
+                                                    $dump = str_replace('"]', '"]</span>', $dump);
+                                                    echo "<pre> $dump </pre>";
+                                                    print ("<hr>");
+
+                                                    echo "<br>domains_private_application_routes<br>";
+                                                    ob_start();
+                                                    var_dump($domains_private_application_routes);
+                                                    $dump = ob_get_contents();
+                                                    ob_end_clean();
+                                                    $dump = str_replace('["', '<span style="color:red; font-weight: bold;">["', $dump);
+                                                    $dump = str_replace('"]', '"]</span>', $dump);
+                                                    echo "<pre> $dump </pre>";
+                                                    print ("<hr>");
 
                                                     echo "<br>subdomains_routes<br>";
                                                     ob_start();
@@ -758,6 +859,8 @@ class route implements interface_route
                                                     echo "<pre> $dump </pre>";
                                                     print ("<hr>");
 
+
+
         foreach ( $subdomains_routes as $subdomain_route_key => $subdomain_route_value )
         {
             foreach ( $common_application_routes as $common_application_route_key => $common_application_route_value )
@@ -777,45 +880,7 @@ class route implements interface_route
 
                                                     print ("<hr>");
 
-        die ( "aborting here. testing." );
-
-
-        print ("<hr><hr>");
-        foreach ( $iterator as $path )
-        {
-/*            $path_string = str_replace($subdomains_root_directory,$this -> configuration -> core ["root_domain"],$path->__toString());
-            if
-            (
-                !in_array ( substr( strrchr( $path_string, '/' ), 1 ), $this -> configuration -> filesystem ["relative_folders"], TRUE ) &&
-                !in_array($path->getSubPath(), $excluded_directories)
-            )
-            {
-                print ($path_string."<br>");
-            }*/
-        }
-
-        print ("<hr>");
-
-        $domains_root_directory =  $this -> filesystem -> get_root () . "/" . $this -> configuration -> filesystem ["relative_folders"][ "domains" ];
-        $subdomains_routes = array ();
-
-        $iterator = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($domains_root_directory), \RecursiveIteratorIterator::SELF_FIRST );
-        $iterator->setFlags(\RecursiveDirectoryIterator::SKIP_DOTS);
-
-        foreach ( $iterator as $path )
-        {
-            $route = str_replace($domains_root_directory,$this -> configuration -> core ["root_domain"],$path->__toString());
-            //print ($route."<br>");
-
-        }
-
-
-        /*
-        $filetypes = array("jpg", "png");
-        if (!preg_match("/\.(" . implode("|", $filetypes) . ")*$/i", $file, $matches)) {
-            echo $file;
-        }
-*/
+        die ( "aborting here. testing..." );
 
     }
 
