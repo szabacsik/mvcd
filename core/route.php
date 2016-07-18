@@ -684,9 +684,6 @@ class route implements interface_route
         //$subdomains_root_directory = $this -> filesystem -> get_root () . "/" . $this -> configuration -> filesystem [ "relative_folders" ][ "subdomains" ];
         //$private_applications_directory_name = $this->configuration->filesystem ["relative_folders"] ["private_applications"];
 
-        Print ("<br>domain route builder<br>");
-        Print ("subdomains_root_directory=".$subdomains_root_directory."<br>");
-
         $subdomains_routes = array ();
         $subdomains_private_application_routes = false;
 
@@ -703,7 +700,6 @@ class route implements interface_route
         {
             if ( !preg_match ( "/(\.|\..)$/", $iterator->key(), $output_array ) )
             {
-                print ("checkin: " . $iterator->key() . "<br>");
                 $path_string = str_replace($subdomains_root_directory, $this->configuration->core ["root_domain"], $iterator->key());
                 $path_array = explode("/", $path_string);
                 $excluded_path = array_intersect($excluded_directories, $path_array);
