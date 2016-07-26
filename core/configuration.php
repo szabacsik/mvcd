@@ -22,7 +22,8 @@ class configuration implements ibasic
         "routable_folder_prefix" => "",
         "routable_folder_suffix" => ".route",
         "script_extension"       => "php",
-        "namespace"              => 'improwerk\implement\mvcd\\'
+        "namespace"              => 'improwerk\implement\mvcd\\',
+        "default_language"       => 'en_us'
     );
 
     //Filesystem
@@ -31,7 +32,7 @@ class configuration implements ibasic
         "relative_folders" => array
         (
             "private_applications" => "applications",
-            "common_applications"  => "applications",
+            "master_applications"  => "applications",
             "subdomains"           => "subdomains",
             "domains"              => "domains",
             "user_files"           => "files",
