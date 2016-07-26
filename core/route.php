@@ -176,7 +176,7 @@ class route implements interface_route
     public function set_application($name, $filepath, $mode = "folder")
     {
 
-        $pathitem [] = array("name" => $name, "type" => "application", "url" => "set_application needs to set", "filepath" => $filepath, "properties" => array("mode" => $mode, "owner" => "common"));
+        $pathitem [] = array("name" => $name, "type" => "application", "url" => "set_application needs to set", "filepath" => $filepath, "properties" => array("mode" => $mode, "owner" => "master"));
         if (is_array($this->get_application())) {
             $this->sense ["pathitem"] [$this->application_index] = $pathitem;
         } else {
@@ -195,7 +195,7 @@ class route implements interface_route
     public function set_controller($name, $filepath, $mode = "file")
     {
 
-        $pathitem [] = array("name" => $name, "type" => "controller", "url" => "set_controller needs to set", "filepath" => $filepath, "properties" => array("mode" => $mode, "owner" => "common"));
+        $pathitem [] = array("name" => $name, "type" => "controller", "url" => "set_controller needs to set", "filepath" => $filepath, "properties" => array("mode" => $mode, "owner" => "master"));
         if (is_array($this->get_controller())) {
             $this->sense ["pathitem"] [$this->controller_index] = $pathitem;
         } else {
@@ -261,19 +261,19 @@ class route implements interface_route
             $full_path_extended_properties = array();
 
             foreach (array_reverse($this->sense ["pathitem"], true) as $path_item_index => $path_item_name) {
-                $is_common_application = $this->is_common_application($path_item_name);
+                $is_master_application = $this->is_master_application($path_item_name);
                 $sub_path_items = array_slice($this->sense ["pathitem"], 0, $path_item_index + 1);
                 $is_private_application = $this->is_private_application($sub_path_items);
 
-                if (is_array($is_common_application) || is_array($is_private_application)) {
+                if (is_array($is_master_application) || is_array($is_private_application)) {
                     $path_item_application_index = $path_item_index;
                     $this->application_index = $path_item_index;
-                    if (is_array($is_common_application)) {
+                    if (is_array($is_master_application)) {
                         $pathitem_url .= "/" . $path_item_name;
 
-                        $is_common_application ["url"] = $pathitem_url;
-                        $full_path_extended_properties [$path_item_index] = $is_common_application;
-                        $parent = $is_common_application;
+                        $is_master_application ["url"] = $pathitem_url;
+                        $full_path_extended_properties [$path_item_index] = $is_master_application;
+                        $parent = $is_master_application;
                     } else {
                         $is_private_application ["url"] = $pathitem_url;
                         $full_path_extended_properties [$path_item_index] = $is_private_application;
@@ -311,7 +311,7 @@ class route implements interface_route
                                 "type" => "base",
                                 "url" => $this->get_domain() . "/" . $this->get_base(),
                                 "filepath" => $this->filesystem->get_root(),
-                                "properties" => array("mode" => "folder", "owner" => "common"));
+                                "properties" => array("mode" => "folder", "owner" => "master"));
                         } else {
                             $path_item_properties = array("name" => $path_item_name,
                                 "type" => "faulty",
@@ -328,7 +328,7 @@ class route implements interface_route
             $pathitem_properties ["name"] = "/";
             $pathitem_properties ["type"] = "base";
             $pathitem_properties ["url"] = $pathitem_url;
-            $pathitem_properties ["properties"] = array("mode" => "folder", "owner" => "common");
+            $pathitem_properties ["properties"] = array("mode" => "folder", "owner" => "master");
             $pathitem_properties ["filepath"] = $this->filesystem->get_root();
             $full_path_extended_properties [] = $pathitem_properties;
         }
@@ -390,9 +390,9 @@ class route implements interface_route
 
     }
 
-    private function is_common_application($path_item_name)
+    private function is_master_application($path_item_name)
     {
-        $filesystem_target = $this->filesystem->get_root() . "/" . $this->configuration->filesystem ["relative_folders"] ["common_applications"] . "/" . $path_item_name;
+        $filesystem_target = $this->filesystem->get_root() . "/" . $this->configuration->filesystem ["relative_folders"] ["master_applications"] . "/" . $path_item_name;
         $filesystem_target = preg_replace('~/+~', '/', $filesystem_target);
         if (is_dir($filesystem_target) && $path_item_name != "/") {
             $result = array
@@ -400,7 +400,7 @@ class route implements interface_route
                 "name" => $path_item_name,
                 "type" => "application",
                 "filepath" => $filesystem_target,
-                "properties" => array("mode" => "folder", "owner" => "common")
+                "properties" => array("mode" => "folder", "owner" => "master")
             );
             return $result;
         } else {
@@ -460,7 +460,7 @@ class route implements interface_route
                         "type" => "base",
                         "url" => "",
                         "filepath" => $this->filesystem->get_root(),
-                        "properties" => array("mode" => "folder", "owner" => "common"));
+                        "properties" => array("mode" => "folder", "owner" => "master"));
                 }
 
                 //array_pop ( $temp );
@@ -578,13 +578,13 @@ class route implements interface_route
 
         //foreach ( $this -> point_list as $index => $point_name )
 
-        //$common_application_directory = $this -> filesystem -> get_root () . "/" . $this -> configuration -> filesystem [ "relative_folders" ] [ "common_applications" ] . "/";
+        //$master_application_directory = $this -> filesystem -> get_root () . "/" . $this -> configuration -> filesystem [ "relative_folders" ] [ "master_applications" ] . "/";
 
         /*        foreach ( $this -> point_list as $index => $point_name )
                 {
-                    if ( is_dir ( $common_application_directory . $point_name ) )
+                    if ( is_dir ( $master_application_directory . $point_name ) )
                     {
-                        $posibilities [ $index ] [] = $common_application_directory . $point_name;
+                        $posibilities [ $index ] [] = $master_application_directory . $point_name;
                     }
                 }*/
 
@@ -607,7 +607,7 @@ class route implements interface_route
                 echo(" - yes<br>");
             } else {
                 echo(" - no<br>");
-                //$common_application_directory = $this -> filesystem -> get_root () . "/" . $this -> configuration -> filesystem [ "relative_folders" ] [ "common_applications" ] . "/";
+                //$master_application_directory = $this -> filesystem -> get_root () . "/" . $this -> configuration -> filesystem [ "relative_folders" ] [ "master_applications" ] . "/";
                 if ($parent_path !== "")
                     $subdomain_directory = $parent_path;
                 else
@@ -623,8 +623,8 @@ class route implements interface_route
                     echo(" - no<br>");
 
                 /*
-                                echo ( "common app? " . $common_application_directory . $item [ "name" ] );
-                                if ( is_dir ( $common_application_directory . $item [ "name" ] ) )
+                                echo ( "master app? " . $master_application_directory . $item [ "name" ] );
+                                if ( is_dir ( $master_application_directory . $item [ "name" ] ) )
                                 {
                                     echo ( " - yes<br>" );
                                 }
@@ -640,7 +640,7 @@ class route implements interface_route
 
     private function application_route_builder ( $applications_root_directory )
     {
-        //$applications_root_directory = $this -> filesystem -> get_root () . "/" . $this -> configuration -> filesystem [ "relative_folders" ][ "common_applications" ];
+        //$applications_root_directory = $this -> filesystem -> get_root () . "/" . $this -> configuration -> filesystem [ "relative_folders" ][ "master_applications" ];
         $application_routes = array ();
 
         $iterator = new \RecursiveIteratorIterator ( new \RecursiveDirectoryIterator ( $applications_root_directory ), \RecursiveIteratorIterator::SELF_FIRST );
@@ -743,16 +743,16 @@ class route implements interface_route
     function builder ()
     {
 
-        $common_applications_root_directory = $this -> filesystem -> get_root () . "/" . $this -> configuration -> filesystem [ "relative_folders" ][ "common_applications" ];
-        $common_application_routes = $this -> application_route_builder ( $common_applications_root_directory );
-        $common_application_routes [ "/" ] = $common_applications_root_directory . "/" . $this -> default_application_folder_name () . "/" . $this -> default_controller_filename ();
-        $common_application_routes [ "" ] = $common_applications_root_directory . "/" . $this -> default_application_folder_name () . "/" . $this -> default_controller_filename ();
-        $array_keys = array_map ( 'strlen', array_keys ( $common_application_routes ) );
-        array_multisort ( $array_keys, SORT_DESC, $common_application_routes );
+        $master_applications_root_directory = $this -> filesystem -> get_root () . "/" . $this -> configuration -> filesystem [ "relative_folders" ][ "master_applications" ];
+        $master_application_file_routes = $this -> application_route_builder ( $master_applications_root_directory );
+        $master_application_file_routes [ "/" ] = $master_applications_root_directory . "/" . $this -> default_application_folder_name () . "/" . $this -> default_controller_filename ();
+        $master_application_file_routes [ "" ] = $master_applications_root_directory . "/" . $this -> default_application_folder_name () . "/" . $this -> default_controller_filename ();
+        $array_keys = array_map ( 'strlen', array_keys ( $master_application_file_routes ) );
+        array_multisort ( $array_keys, SORT_DESC, $master_application_file_routes );
 
-                                                echo "<br>common_application_routes<br>";
+                                                echo "<br>master_application_file_routes<br>";
                                                 ob_start();
-                                                var_dump($common_application_routes);
+                                                var_dump($master_application_file_routes);
                                                 $dump = ob_get_contents();
                                                 ob_end_clean();
                                                 $dump = str_replace('["', '<span style="color:red; font-weight: bold;">["', $dump);
@@ -859,9 +859,9 @@ class route implements interface_route
 
         foreach ( $subdomains_routes as $subdomain_route_key => $subdomain_route_value )
         {
-            foreach ( $common_application_routes as $common_application_route_key => $common_application_route_value )
+            foreach ( $master_application_file_routes as $master_application_route_key => $master_application_route_value )
             {
-                $all_routes [] = $this -> get_domain() . $subdomain_route_key . $common_application_route_key;
+                $all_routes [] = $this -> get_domain() . $subdomain_route_key . $master_application_route_key;
             }
         }
 
@@ -963,12 +963,12 @@ class route implements interface_route
 /*
     function recursive ( $index = 0, $as = "" ) //as = application, controller, folder, paramterer
     {
-        $common_application_directory = $this -> filesystem -> get_root () . "/" . $this -> configuration -> filesystem [ "relative_folders" ] [ "common_applications" ] . "/";
+        $master_application_directory = $this -> filesystem -> get_root () . "/" . $this -> configuration -> filesystem [ "relative_folders" ] [ "master_applications" ] . "/";
         $subdomain_directory = $this -> filesystem -> get_root () . "/" . $this -> configuration -> filesystem [ "relative_folders" ] [ "subdomains" ] . "/";
         $source = array_slice ( $this -> point_list, $index, count ( $this -> point_list ) - 1 );
         foreach ( $source as $index => $point_name )
         {
-            if ( is_dir ( $common_application_directory . $point_name ) )
+            if ( is_dir ( $master_application_directory . $point_name ) )
             {
                 $this -> recursive ( $index = 0, $as = "" )
             }
@@ -1089,7 +1089,7 @@ class route implements interface_route
         $filesystem_target = $this -> filesystem -> get_root () . "/controllers/" . $pathitem_name . ".php";
         if ( is_file ( $filesystem_target ) )
         {
-            $result = array ( "type" => "controller", "properties" => array ( "mode" => "file", "owner" => "common" ), "filepath" => $filesystem_target );
+            $result = array ( "type" => "controller", "properties" => array ( "mode" => "file", "owner" => "master" ), "filepath" => $filesystem_target );
             return $result;
         }
         else //TODO: Logical controller without file.

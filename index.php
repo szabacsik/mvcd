@@ -7,6 +7,9 @@ $startScriptTime = microtime ( TRUE );
  * Time: 15:30
  */
 
+
+//die(".");
+
 require_once('core/constants.php');
 require_once('core/interfaces.php');
 require_once('core/configuration.php');
